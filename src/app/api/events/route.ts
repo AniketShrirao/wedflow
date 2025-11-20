@@ -95,8 +95,6 @@ export async function PUT(request: NextRequest) {
         const body = await request.json()
         const { couple_intro, events, venues, timeline } = body
 
-        console.log('Request body:', { couple_intro, events, venues, timeline })
-
 
 
         // Check if event details already exist

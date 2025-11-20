@@ -63,7 +63,6 @@ export class DashboardErrorBoundary extends Component<Props, State> {
     }
 
     // In a real app, this would open a support ticket or feedback form
-    console.log('Report issue:', errorDetails)
     alert('Error details have been logged. Please contact support if the issue persists.')
   }
 

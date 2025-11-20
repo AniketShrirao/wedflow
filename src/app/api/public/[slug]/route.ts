@@ -87,23 +87,7 @@ export async function GET(
             return field
         }
 
-        // Log fetched data for debugging
-        console.log('Fetched data for slug:', slug, {
-            couple: !!couple,
-            eventDetails: !!eventDetails,
-            photoCollection: !!photoCollection,
-            giftSettings: !!giftSettings
-        })
 
-        // Debug: Log the actual data types
-        console.log('Event details raw data:', {
-            events: eventDetails?.events,
-            eventsType: typeof eventDetails?.events,
-            eventsIsArray: Array.isArray(eventDetails?.events),
-            venues: eventDetails?.venues,
-            venuesType: typeof eventDetails?.venues,
-            venuesIsArray: Array.isArray(eventDetails?.venues)
-        })
 
         // Prepare public data (exclude sensitive information)
         const rawPublicData = {

@@ -39,11 +39,10 @@ export function PhotoGallerySection({ coupleSlug }: PhotoGallerySectionProps) {
   // Placeholder photos for demo
   const placeholderPhotos = [
     { id: 1, category: 'Engagement', color: 'from-pink-200 to-rose-200' },
-    { id: 2, category: 'Pre-Wedding', color: 'from-purple-200 to-indigo-200' },
-    { id: 3, category: 'Ceremony', color: 'from-blue-200 to-cyan-200' },
-    { id: 4, category: 'Reception', color: 'from-green-200 to-emerald-200' },
-    { id: 5, category: 'Candid', color: 'from-yellow-200 to-orange-200' },
-    { id: 6, category: 'Family', color: 'from-red-200 to-pink-200' },
+    { id: 2, category: 'Ceremony', color: 'from-blue-200 to-cyan-200' },
+    { id: 3, category: 'Reception', color: 'from-green-200 to-emerald-200' },
+    { id: 4, category: 'Candid', color: 'from-yellow-200 to-orange-200' },
+    { id: 5, category: 'Family', color: 'from-red-200 to-pink-200' },
   ]
 
   return (

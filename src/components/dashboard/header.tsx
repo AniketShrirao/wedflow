@@ -17,13 +17,13 @@ export function Header({ couple, onMenuToggle, isMobileMenuOpen }: HeaderProps) 
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex items-center min-w-0 flex-1">
           {/* Mobile menu button */}
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden mr-2"
+            className="lg:hidden mr-2 shrink-0"
             onClick={onMenuToggle}
           >
             {isMobileMenuOpen ? (
@@ -33,19 +33,14 @@ export function Header({ couple, onMenuToggle, isMobileMenuOpen }: HeaderProps) 
             )}
           </Button>
           
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="hidden sm:block text-base sm:text-lg font-semibold text-gray-900 truncate">
               Wedding Dashboard
             </h1>
-            {couple && (
-              <p className="text-sm text-gray-600">
-                {couple.partner1_name} & {couple.partner2_name}
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           {/* Notification Center */}
           <div className="relative">
             <Button
@@ -60,25 +55,25 @@ export function Header({ couple, onMenuToggle, isMobileMenuOpen }: HeaderProps) 
             </Button>
             
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                <div className="p-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">
+              <div className="absolute right-0 mt-2 w-64 sm:w-72 md:w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-80 sm:max-h-96 overflow-y-auto">
+                <div className="p-2 sm:p-3 md:p-4">
+                  <h3 className="text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">
                     Notifications
                   </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-start gap-2">
                       <div className="shrink-0">
-                        <div className="h-2 w-2 bg-blue-500 rounded-full mt-2"></div>
+                        <div className="h-2 w-2 bg-blue-500 rounded-full mt-1.5"></div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-gray-900 leading-tight">
                           Welcome to Wedflow! Complete your profile setup.
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                        <p className="text-xs text-gray-500 mt-0.5">2 hours ago</p>
                       </div>
                     </div>
-                    <div className="text-center py-2">
-                      <p className="text-sm text-gray-500">No more notifications</p>
+                    <div className="text-center py-1.5 sm:py-2">
+                      <p className="text-xs sm:text-sm text-gray-500">No more notifications</p>
                     </div>
                   </div>
                 </div>

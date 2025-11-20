@@ -327,3 +327,35 @@ nextjs-portal {
 .insecure-content-warning {
   display: none !important;
 }
+
+/* Ensure animated heart doesn't get clipped */
+body,
+html {
+  overflow-x: clip; /* Prevent horizontal scroll but allow vertical */
+}
+
+/* Allow the heart container to overflow */
+#__next {
+  overflow: visible;
+}
+
+/* Animated heart floating animation */
+@keyframes heart-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.heart-path {
+  animation: heart-float 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-path {
+    animation: none !important;
+  }
+}

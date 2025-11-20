@@ -2,6 +2,7 @@
 
 import { Heart, Calendar, ChevronDown, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { AnimatedHeart } from './animated-heart'
 
 interface HeroSectionProps {
   couple: {
@@ -48,17 +49,14 @@ export function HeroSection({ couple, coupleIntro, availableSections }: HeroSect
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-rose-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
+      {/* Animated Heart - travels with scroll */}
+      <AnimatedHeart 
+        partner1={couple.partner1_name}
+        partner2={couple.partner2_name}
+      />
+
       {/* Content */}
       <div className={`relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        {/* Heart Icon with Glow */}
-        <div className="flex justify-center mb-8 md:mb-12">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full blur-2xl opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
-            <div className="relative p-6 md:p-8 bg-white/90 backdrop-blur-md rounded-full shadow-2xl border border-pink-100/50">
-              <Heart className="h-12 w-12 md:h-16 md:w-16 text-pink-500 fill-current animate-pulse" />
-            </div>
-          </div>
-        </div>
 
         {/* Couple Names */}
         <h1 className="mb-6 md:mb-8">

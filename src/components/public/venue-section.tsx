@@ -12,7 +12,19 @@ export function VenueSection({ venues }: VenueSectionProps) {
   if (!venues || venues.length === 0) return null
 
   const getDirectionsUrl = (venue: VenueDetails) => {
-    if (venue.maps_url) return venue.maps_url
+    if (venue.maps_url) {
+      // Ensure the URL has a protocol
+      const url = venue.maps_url.trim()
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url
+      }
+      // If it starts with www or google.com, add https://
+      if (url.startsWith('www.') || url.startsWith('google.com')) {
+        return `https://${url}`
+      }
+      // Otherwise, assume it's a google maps URL
+      return `https://${url}`
+    }
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`
   }
 

@@ -11,13 +11,16 @@ import { PhotoGallery } from './photo-gallery'
 import { PhotoUpload } from './photo-upload'
 import { PhotoCollection, Photo, PHOTO_CATEGORIES } from '@/lib/types/photos'
 import { Folder, Upload, Star, Settings, ExternalLink } from 'lucide-react'
-// Using simple alerts instead of toast for now
+import { useToast } from '@/hooks/use-toast'
 
 export function PhotoManager() {
   const [photoCollection, setPhotoCollection] = useState<PhotoCollection | null>(null)
   const [driveUrl, setDriveUrl] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState<'gallery' | 'upload' | 'settings'>('upload')
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchPhotoCollection()
@@ -25,6 +28,7 @@ export function PhotoManager() {
 
   const fetchPhotoCollection = async () => {
     try {
+      setIsRefreshing(true)
       const response = await fetch('/api/photos')
       if (response.ok) {
         const data = await response.json()
@@ -36,12 +40,17 @@ export function PhotoManager() {
       console.error('Failed to load photo collection')
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
   const saveDriveUrl = async () => {
     if (!driveUrl.trim()) {
-      alert('Please enter a valid Google Drive folder URL')
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid Google Drive folder URL',
+        variant: 'error'
+      })
       return
     }
 
@@ -66,13 +75,24 @@ export function PhotoManager() {
       if (response.ok) {
         const data = await response.json()
         setPhotoCollection(data)
-        alert('Google Drive folder connected successfully!')
+        toast({
+          title: 'Success',
+          description: 'Google Drive folder connected successfully!'
+        })
       } else {
-        alert('Failed to save Google Drive folder')
+        toast({
+          title: 'Error',
+          description: 'Failed to save Google Drive folder',
+          variant: 'error'
+        })
       }
     } catch (error) {
       console.error('Failed to save drive URL:', error)
-      alert('Failed to save Google Drive folder')
+      toast({
+        title: 'Error',
+        description: 'Failed to save Google Drive folder',
+        variant: 'error'
+      })
     } finally {
       setIsSaving(false)
     }
@@ -86,21 +106,29 @@ export function PhotoManager() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          photos,
-          category_id: 'other' // Default category, should be passed from upload component
-        }),
+        body: JSON.stringify({ photos })
       })
 
       if (response.ok) {
         await fetchPhotoCollection() // Refresh the collection
-        alert(`Successfully uploaded ${photos.length} photo(s)!`)
+        toast({
+          title: 'Upload Complete',
+          description: `Successfully uploaded ${photos.length} photo(s)!`
+        })
       } else {
-        alert('Failed to save uploaded photos')
+        toast({
+          title: 'Upload Failed',
+          description: 'Failed to save uploaded photos',
+          variant: 'error'
+        })
       }
     } catch (error) {
       console.error('Failed to save uploaded photos:', error)
-      alert('Failed to save uploaded photos')
+      toast({
+        title: 'Error',
+        description: 'Failed to save uploaded photos',
+        variant: 'error'
+      })
     }
   }
 
@@ -126,31 +154,84 @@ export function PhotoManager() {
       if (response.ok) {
         const data = await response.json()
         setPhotoCollection(data)
-        console.log(
-          currentHighlights.includes(photoId) 
-            ? 'Removed from highlights' 
-            : 'Added to highlights'
-        )
+        toast({
+          title: 'Updated',
+          description: currentHighlights.includes(photoId) ? 'Removed from highlights' : 'Added to highlights'
+        })
       } else {
-        alert('Failed to update highlights')
+        toast({
+          title: 'Error',
+          description: 'Failed to update highlights',
+          variant: 'error'
+        })
       }
     } catch (error) {
       console.error('Failed to update highlights:', error)
-      alert('Failed to update highlights')
+      toast({
+        title: 'Error',
+        description: 'Failed to update highlights',
+        variant: 'error'
+      })
+    }
+  }
+
+  const handlePhotoDelete = async (photoId: string) => {
+    if (!photoCollection) return
+
+    try {
+      const response = await fetch('/api/photos/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoId }),
+      })
+
+      if (response.ok) {
+        await fetchPhotoCollection()
+        toast({
+          title: 'Deleted',
+          description: 'Photo deleted successfully'
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete photo',
+          variant: 'error'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to delete photo:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete photo',
+        variant: 'error'
+      })
     }
   }
 
   const getPhotoStats = () => {
     if (!photoCollection) return { total: 0, highlights: 0, categories: 0 }
 
-    const total = photoCollection.categories.reduce((sum, cat) => sum + (cat.photos?.length || 0), 0)
-    const highlights = photoCollection.highlight_photos?.length || 0
-    const categories = photoCollection.categories.filter(cat => (cat.photos?.length || 0) > 0).length
+    // Handle both old format (with categories array) and new format (empty columns)
+    const categories = photoCollection.categories || []
+    const total = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat.photos?.length || 0), 0) : 0
+    const highlights = Array.isArray(photoCollection.highlight_photos) ? photoCollection.highlight_photos.length : 0
+    const categoriesWithPhotos = Array.isArray(categories) ? categories.filter(cat => (cat.photos?.length || 0) > 0).length : 0
 
-    return { total, highlights, categories }
+    return { total, highlights, categories: categoriesWithPhotos }
   }
 
   const stats = getPhotoStats()
+
+  // Set default tab based on whether photos exist
+  useEffect(() => {
+    if (stats.total > 0) {
+      setActiveTab('gallery')
+    } else {
+      setActiveTab('upload')
+    }
+  }, [stats.total])
 
   if (isLoading) {
     return (
@@ -164,48 +245,112 @@ export function PhotoManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Photo Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Photo Management</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             Manage your wedding photos and create beautiful galleries
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <Badge variant="outline">{stats.total} Photos</Badge>
+            <Badge variant="outline" className="text-xs">{stats.total} Photos</Badge>
           </div>
           <div className="flex items-center gap-1">
-            <Star className="h-4 w-4" />
+            <Star className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>{stats.highlights} Highlights</span>
           </div>
           <div className="flex items-center gap-1">
-            <Folder className="h-4 w-4" />
+            <Folder className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>{stats.categories} Categories</span>
           </div>
         </div>
       </div>
 
-      <Tabs defaultValue="gallery" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="gallery">Gallery</TabsTrigger>
-          <TabsTrigger value="upload">Upload</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'gallery' | 'upload' | 'settings')} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1 gap-1 bg-muted rounded-lg">
+          <TabsTrigger value="gallery" disabled={stats.total === 0} className="text-xs sm:text-sm py-2 px-1">
+            <Folder className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Gallery</span>
+            <span className="sm:hidden">({stats.total})</span>
+          </TabsTrigger>
+          <TabsTrigger value="upload" className="text-xs sm:text-sm py-2 px-1">
+            <Upload className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Upload</span>
+            <span className="sm:hidden">Up</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm py-2 px-1">
+            <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Settings</span>
+            <span className="sm:hidden">Set</span>
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="gallery">
-          <PhotoGallery
-            photoCollection={photoCollection}
-            onHighlightToggle={handleHighlightToggle}
-            showHighlightControls={true}
-          />
+        <TabsContent value="gallery" className="mt-6">
+          {isRefreshing ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin">
+                    <Folder className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">Loading photos...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : !photoCollection || stats.total === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Photos Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Upload your first photos to see them in the gallery
+                </p>
+                <Button onClick={() => setActiveTab('upload')}>
+                  Go to Upload
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <PhotoGallery
+              photoCollection={photoCollection}
+              onHighlightToggle={handleHighlightToggle}
+              onPhotoDelete={handlePhotoDelete}
+              showHighlightControls={true}
+            />
+          )}
         </TabsContent>
 
-        <TabsContent value="upload">
-          <PhotoUpload onUploadComplete={handleUploadComplete} />
+        <TabsContent value="upload" className="mt-6">
+          {isRefreshing ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin">
+                    <Upload className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">Loading upload settings...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <PhotoUpload onUploadComplete={handleUploadComplete} />
+          )}
         </TabsContent>
 
-        <TabsContent value="settings">
+        <TabsContent value="settings" className="mt-4 sm:mt-6">
+          {isRefreshing ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin">
+                    <Settings className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">Loading settings...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -292,6 +437,7 @@ export function PhotoManager() {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

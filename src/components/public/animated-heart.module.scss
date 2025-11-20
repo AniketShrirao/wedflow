@@ -1,0 +1,53 @@
+// Animated Heart Component Styles
+
+.heartContainer {
+    position: fixed;
+    pointer-events: none;
+    z-index: 50;
+    will-change: transform, opacity, top;
+    transition: all 0.3s ease-out;
+}
+
+.heartSvg {
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.3s;
+    filter: drop-shadow(0 10px 30px rgba(236, 72, 153, 0.3));
+}
+
+// Heart path floating animation
+@keyframes heartFloat {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.heartPath {
+    animation: heartFloat 3s ease-in-out infinite;
+}
+
+// Sparkles animation
+.sparkles {
+    circle {
+        transition: opacity 0.3s ease;
+    }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+    .heartPath {
+        animation: none !important;
+    }
+
+    .heartContainer {
+        transition: none !important;
+    }
+}

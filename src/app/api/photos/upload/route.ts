@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { photos, category_id } = body
+        const { photos } = body
 
         // Get current photo collection
         const { data: photoCollection, error: photoError } = await supabase
@@ -36,15 +36,36 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Photo collection not found' }, { status: 404 })
         }
 
+        // Group photos by category
+        const photosByCategory: Record<string, any[]> = {}
+        photos.forEach((photo: any) => {
+            const categoryId = photo.category_id || 'other'
+            if (!photosByCategory[categoryId]) {
+                photosByCategory[categoryId] = []
+            }
+            photosByCategory[categoryId].push(photo)
+        })
+
         // Update the categories with new photos
-        const updatedCategories = photoCollection.categories.map((category: any) => {
-            if (category.id === category_id) {
+        const updatedCategories = (photoCollection.categories || []).map((category: any) => {
+            if (photosByCategory[category.id]) {
                 return {
                     ...category,
-                    photos: [...(category.photos || []), ...photos]
+                    photos: [...(category.photos || []), ...photosByCategory[category.id]]
                 }
             }
             return category
+        })
+
+        // Add any new categories that don't exist yet
+        Object.keys(photosByCategory).forEach(categoryId => {
+            if (!updatedCategories.find((cat: any) => cat.id === categoryId)) {
+                updatedCategories.push({
+                    id: categoryId,
+                    name: categoryId.charAt(0).toUpperCase() + categoryId.slice(1),
+                    photos: photosByCategory[categoryId]
+                })
+            }
         })
 
         // Update photo collection in database

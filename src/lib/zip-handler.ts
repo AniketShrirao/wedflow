@@ -9,18 +9,12 @@ export interface ZipEntry {
 }
 
 /**
- * Extract files from a ZIP archive
- * Note: This is a simplified implementation for demo purposes
- * In a production environment, you would use a proper ZIP library like JSZip
+ * Extract files from a ZIP archive (not needed for Google Drive uploads)
+ * ZIP files are uploaded directly to Google Drive
  */
 export async function extractZipFiles(zipFile: File): Promise<File[]> {
-    // For now, we'll return the original file as a placeholder
-    // In a real implementation, you would:
-    // 1. Use JSZip or similar library to extract files
-    // 2. Filter for image files only
-    // 3. Return array of extracted image files
-
-    console.warn('ZIP extraction not implemented - returning original file')
+    // Not needed - ZIP files are uploaded directly to Google Drive
+    // Users can extract them manually after download if needed
     return [zipFile]
 }
 
@@ -44,10 +38,14 @@ export function isImageFile(file: File): boolean {
  * Validate file for photo upload
  */
 export function validatePhotoFile(file: File): { valid: boolean; error?: string } {
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    // Check file size (max 10GB for ZIP files, 50MB for images)
+    const maxSize = isZipFile(file)
+        ? 10 * 1024 * 1024 * 1024  // 10GB for ZIP files
+        : 50 * 1024 * 1024          // 50MB for individual images
+
     if (file.size > maxSize) {
-        return { valid: false, error: 'File size must be less than 10MB' }
+        const maxSizeLabel = isZipFile(file) ? '10GB' : '50MB'
+        return { valid: false, error: `File size must be less than ${maxSizeLabel}` }
     }
 
     // Check if it's an image or zip file
@@ -59,7 +57,8 @@ export function validatePhotoFile(file: File): { valid: boolean; error?: string 
 }
 
 /**
- * Process uploaded files (extract ZIP files and validate images)
+ * Process uploaded files (validate images and ZIP files)
+ * ZIP files are uploaded directly to Google Drive without extraction
  */
 export async function processUploadedFiles(files: File[]): Promise<{
     validFiles: File[]
@@ -76,23 +75,8 @@ export async function processUploadedFiles(files: File[]): Promise<{
             continue
         }
 
-        if (isZipFile(file)) {
-            try {
-                const extractedFiles = await extractZipFiles(file)
-                for (const extractedFile of extractedFiles) {
-                    const extractedValidation = validatePhotoFile(extractedFile)
-                    if (extractedValidation.valid && isImageFile(extractedFile)) {
-                        validFiles.push(extractedFile)
-                    } else if (!extractedValidation.valid) {
-                        errors.push(`${extractedFile.name}: ${extractedValidation.error}`)
-                    }
-                }
-            } catch (error) {
-                errors.push(`${file.name}: Failed to extract ZIP file`)
-            }
-        } else if (isImageFile(file)) {
-            validFiles.push(file)
-        }
+        // Add valid files (both images and ZIP files)
+        validFiles.push(file)
     }
 
     return { validFiles, errors }
