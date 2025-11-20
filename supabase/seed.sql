@@ -1,0 +1,69 @@
+-- Seed data for development
+-- Note: This assumes you have test users created in Supabase Auth
+
+-- Insert sample couple (replace user_id with actual auth user ID)
+-- INSERT INTO couples (user_id, couple_slug, partner1_name, partner2_name, wedding_date)
+-- VALUES (
+--   'your-auth-user-id-here',
+--   'john-jane-2024',
+--   'John Doe',
+--   'Jane Smith',
+--   '2024-12-15'
+-- );
+
+-- Sample vendor categories for reference
+-- INSERT INTO vendor_contacts (couple_id, name, phone, email, category, notes)
+-- VALUES 
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Elegant Decorators', '+1234567890', 'contact@elegantdeco.com', 'decorator', 'Specializes in floral arrangements'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Perfect Events', '+1234567891', 'info@perfectevents.com', 'event_coordinator', 'Full service wedding planning'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Grand Hall Manager', '+1234567892', 'manager@grandhall.com', 'hall_manager', 'Luxury venue management'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Royal Transport', '+1234567893', 'booking@royaltransport.com', 'transport', 'Wedding car rentals'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Capture Moments', '+1234567894', 'hello@capturemoments.com', 'photographer', 'Wedding photography and videography'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Delicious Catering', '+1234567895', 'orders@deliciouscatering.com', 'caterer', 'Traditional and modern cuisine');
+
+-- Sample todo tasks templates
+-- INSERT INTO todo_tasks (couple_id, title, description, category, due_date)
+-- VALUES
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Book wedding venue', 'Research and book the perfect venue for the ceremony and reception', 'Venue', '2024-06-01'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Send save the dates', 'Design and send save the date cards to all guests', 'Invitations', '2024-07-01'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Book photographer', 'Find and book a photographer for the wedding day', 'Photography', '2024-06-15'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Order wedding dress', 'Shop for and order the wedding dress with alterations', 'Attire', '2024-08-01'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Plan menu tasting', 'Schedule menu tasting with caterer', 'Catering', '2024-09-01'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Book transportation', 'Arrange transportation for wedding party and guests', 'Transportation', '2024-10-01');
+
+-- Sample guest list
+-- INSERT INTO guests (couple_id, name, phone, email, group_name)
+-- VALUES
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Alice Johnson', '+1234567896', 'alice@email.com', 'Family'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Bob Wilson', '+1234567897', 'bob@email.com', 'Friends'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'Carol Brown', '+1234567898', 'carol@email.com', 'Work Colleagues'),
+--   ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 'David Miller', '+1234567899', 'david@email.com', 'Family');
+
+-- Sample event details
+-- INSERT INTO event_details (couple_id, couple_intro, events, venues, timeline)
+-- VALUES ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 
+--   'We are John and Jane, and we are excited to celebrate our special day with you!',
+--   '[
+--     {"name": "Haldi Ceremony", "date": "2024-12-13", "time": "10:00 AM", "description": "Traditional turmeric ceremony"},
+--     {"name": "Sangeet Night", "date": "2024-12-14", "time": "7:00 PM", "description": "Music and dance celebration"},
+--     {"name": "Wedding Ceremony", "date": "2024-12-15", "time": "11:00 AM", "description": "Main wedding ceremony"},
+--     {"name": "Reception", "date": "2024-12-15", "time": "7:00 PM", "description": "Wedding reception and dinner"}
+--   ]',
+--   '[
+--     {"name": "Grand Palace Hotel", "address": "123 Wedding St, City, State 12345", "description": "Luxury venue with beautiful gardens"}
+--   ]',
+--   '[
+--     {"time": "10:00 AM", "event": "Guest arrival and welcome drinks"},
+--     {"time": "11:00 AM", "event": "Wedding ceremony begins"},
+--     {"time": "12:30 PM", "event": "Photography session"},
+--     {"time": "1:30 PM", "event": "Lunch and cocktails"},
+--     {"time": "7:00 PM", "event": "Reception and dinner"}
+--   ]'
+-- );
+
+-- Sample gift settings
+-- INSERT INTO gift_settings (couple_id, upi_id, custom_message)
+-- VALUES ((SELECT id FROM couples WHERE couple_slug = 'john-jane-2024'), 
+--   'johnjane@paytm',
+--   'Your presence is the greatest gift, but if you wish to bless us with something more, we would be grateful for your contribution to our new journey together.'
+-- );
