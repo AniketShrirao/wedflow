@@ -38,125 +38,18 @@ export async function GET(
             )
         }
 
-        // Get couple information by slug
-        const { data: couple, error: coupleError } = await supabase
-            .from('couples')
-            .select('*')
-            .eq('couple_slug', slug)
-            .single()
+        // Use shared helper to build public data
+        const { getPublicWeddingData } = await import('@/lib/public-service')
+        const data = await getPublicWeddingData(slug)
 
-        if (coupleError || !couple) {
-            return NextResponse.json(
-                { error: 'Wedding site not found' },
-                { status: 404 }
-            )
+        if (!data) {
+            return NextResponse.json({ error: 'Wedding site not found' }, { status: 404 })
         }
 
-        // Get event details
-        const { data: eventDetails } = await supabase
-            .from('event_details')
-            .select('*')
-            .eq('couple_id', couple.id)
-            .single()
-
-        // Get highlighted images
-        const { data: highlightedImages } = await supabase
-            .from('images')
-            .select('*')
-            .eq('couple_id', couple.id)
-            .eq('is_highlighted', true)
-            .order('created_at', { ascending: false })
-
-        // Get gift settings
-        const { data: giftSettings } = await supabase
-            .from('gift_settings')
-            .select('*')
-            .eq('couple_id', couple.id)
-            .single()
-
-        // Get playlists
-        const { data: playlists } = await supabase
-            .from('playlists')
-            .select('*')
-            .eq('couple_id', couple.id)
-            .order('created_at', { ascending: false })
-
-        // Parse JSON fields if they're stored as strings
-        const parseJsonField = (field: any, fieldName: string = 'unknown') => {
-            if (!field) return null
-            if (typeof field === 'string') {
-                try {
-                    return JSON.parse(field)
-                } catch (error) {
-                    console.warn(`Failed to parse JSON field ${fieldName}:`, error)
-                    return field
-                }
-            }
-            return field
-        }
-
-        // Prepare public data (exclude sensitive information)
-        const rawPublicData = {
-            couple: {
-                id: couple.id,
-                partner1_name: couple.partner1_name,
-                partner2_name: couple.partner2_name,
-                wedding_date: couple.wedding_date,
-                couple_slug: couple.couple_slug,
-            },
-            events: {
-                couple_intro: eventDetails?.couple_intro || couple.couple_intro || '',
-                events: parseJsonField(eventDetails?.events, 'events') || [],
-                venues: parseJsonField(eventDetails?.venues, 'venues') || [],
-                timeline: parseJsonField(eventDetails?.timeline, 'timeline') || []
-            },
-            photos: {
-                categories: [],
-                highlight_photos: (highlightedImages || []).map(img => img.id)
-            },
-            gifts: giftSettings ? {
-                upi_id: giftSettings.upi_id,
-                qr_code_url: giftSettings.qr_code_url,
-                custom_message: giftSettings.custom_message
-            } : null,
-            playlists: {
-                playlists: playlists || []
-            }
-        }
-
-        // Validate and sanitize the data before sending
-        const validationResult = validatePublicWeddingData(rawPublicData)
-
-        if (!validationResult.isValid) {
-            console.error('Data validation failed for slug:', slug, validationResult.errors)
-            // Return data anyway with validation warnings for now
-            const response = NextResponse.json({
-                ...rawPublicData,
-                _validation: {
-                    errors: validationResult.errors,
-                    warnings: validationResult.warnings
-                }
-            })
-
-            response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-            response.headers.set('Pragma', 'no-cache')
-            response.headers.set('Expires', '0')
-
-            return response
-        }
-
-        const response = NextResponse.json({
-            ...validationResult.data,
-            _validation: {
-                warnings: validationResult.warnings
-            }
-        })
-
-        // Add cache headers to ensure fresh data
+        const response = NextResponse.json(data)
         response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
         response.headers.set('Pragma', 'no-cache')
         response.headers.set('Expires', '0')
-
         return response
     } catch (error) {
         console.error('Error fetching public wedding data:', error)

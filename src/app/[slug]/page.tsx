@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { PublicWeddingSite } from '@/components/public/wedding-site'
+import { getPublicWeddingData } from '@/lib/public-service'
 
 interface PublicWeddingSitePageProps {
   params: Promise<{ slug: string }>
@@ -36,11 +37,9 @@ export default async function PublicWeddingSitePage({
   params,
 }: PublicWeddingSitePageProps) {
   const { slug } = await params
-  const data = await getWeddingData(slug)
+  const data = await getPublicWeddingData(slug)
 
-  if (!data) {
-    notFound()
-  }
+  if (!data) notFound()
 
   return <PublicWeddingSite data={data} />
 }
