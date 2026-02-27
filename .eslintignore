@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+public
+scripts
+supabase
+sanity
+.vscode
+.git
+.next/**

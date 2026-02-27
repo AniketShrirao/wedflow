@@ -99,6 +99,7 @@ body {
 
 /* Better touch targets for mobile */
 @media (max-width: 768px) {
+
   button,
   a {
     min-height: 44px;
@@ -128,6 +129,7 @@ html {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -259,7 +261,8 @@ button:disabled {
 /* Ensure content doesn't get hidden behind mobile nav */
 @media (max-width: 768px) {
   body {
-    padding-bottom: 80px; /* Height of mobile nav */
+    padding-bottom: 80px;
+    /* Height of mobile nav */
   }
 }
 
@@ -299,6 +302,7 @@ button:disabled {
 
 /* Better touch feedback */
 @media (hover: none) and (pointer: coarse) {
+
   button:active,
   a:active {
     transform: scale(0.95);
@@ -331,7 +335,8 @@ nextjs-portal {
 /* Ensure animated heart doesn't get clipped */
 body,
 html {
-  overflow-x: clip; /* Prevent horizontal scroll but allow vertical */
+  overflow-x: clip;
+  /* Prevent horizontal scroll but allow vertical */
 }
 
 /* Allow the heart container to overflow */
@@ -341,10 +346,12 @@ html {
 
 /* Animated heart floating animation */
 @keyframes heart-float {
+
   0%,
   100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }

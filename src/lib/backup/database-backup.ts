@@ -37,7 +37,9 @@ class DatabaseBackup {
                 'guests',
                 'vendor_contacts',
                 'event_details',
-                'photo_collections',
+                'images',
+                'uploads',
+                'categories',
                 'gift_settings',
                 'todo_tasks'
             ];
@@ -124,7 +126,9 @@ class DatabaseBackup {
                 'guests',
                 'vendor_contacts',
                 'event_details',
-                'photo_collections',
+                'images',
+                'uploads',
+                'categories',
                 'gift_settings',
                 'todo_tasks'
             ];

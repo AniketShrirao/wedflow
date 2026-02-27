@@ -25,21 +25,39 @@ export async function PUT(request: NextRequest) {
         const body = await request.json()
         const { highlight_photos } = body
 
-        // Update highlight photos
-        const { data, error } = await supabase
-            .from('photo_collections')
-            .update({
-                highlight_photos: highlight_photos || []
-            })
-            .eq('couple_id', couple.id)
-            .select()
-            .single()
-
-        if (error) {
-            return NextResponse.json({ error: 'Failed to update highlight photos' }, { status: 500 })
+        if (!Array.isArray(highlight_photos)) {
+            return NextResponse.json({ error: 'highlight_photos must be an array' }, { status: 400 })
         }
 
-        return NextResponse.json(data)
+        // First, clear all highlights for this couple
+        await supabase
+            .from('images')
+            .update({ is_highlighted: false })
+            .eq('couple_id', couple.id)
+
+        // Then set new highlights
+        if (highlight_photos.length > 0) {
+            const { error: updateError } = await supabase
+                .from('images')
+                .update({ is_highlighted: true })
+                .in('id', highlight_photos)
+
+            if (updateError) {
+                return NextResponse.json({ error: 'Failed to update highlight photos' }, { status: 500 })
+            }
+        }
+
+        // Return updated highlighted images
+        const { data: highlightedImages } = await supabase
+            .from('images')
+            .select('*')
+            .eq('couple_id', couple.id)
+            .eq('is_highlighted', true)
+
+        return NextResponse.json({
+            success: true,
+            highlight_photos: (highlightedImages || []).map(img => img.id)
+        })
     } catch (error) {
         console.error('Error updating highlight photos:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

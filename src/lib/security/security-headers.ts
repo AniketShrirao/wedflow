@@ -253,6 +253,9 @@ export class SecurityAuditor {
  */
 export function setupCSPReporting() {
     if (typeof window !== 'undefined') {
+        const win = window as any;
+        if (win.__cspReportingInitialized) return;
+        win.__cspReportingInitialized = true;
         document.addEventListener('securitypolicyviolation', (event) => {
             const violation = {
                 documentURI: event.documentURI,

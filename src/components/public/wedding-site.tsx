@@ -2,9 +2,11 @@
 
 import { HeroSection } from './hero-section'
 import { EventsCarousel } from './events-carousel'
-import { VenueSection } from './venue-section'
+import { VenueCarouselSection } from './venue-carousel-section'
 import { TimelineSection } from './timeline-section'
+import { FeaturedPlaylistSection } from './featured-playlist-section'
 import { PhotoGallerySection } from './photo-gallery-section'
+import { PhotoUploadSection } from './photo-upload-section'
 import { GiftPortalSection } from './gift-portal-section'
 import { PublicFooter } from './footer'
 import { FloatingNav } from './floating-nav'
@@ -16,6 +18,7 @@ import { ValidationErrorDisplay } from '@/components/validation/validation-error
 interface PublicWeddingSiteProps {
   data: {
     couple: {
+      id: string
       partner1_name: string
       partner2_name: string
       wedding_date: string | null
@@ -36,6 +39,9 @@ interface PublicWeddingSiteProps {
       qr_code_url: string | null
       custom_message: string | null
     } | null
+    playlists: {
+      playlists: any[]
+    } | null
     _validation?: {
       warnings: Array<{
         field: string
@@ -47,10 +53,10 @@ interface PublicWeddingSiteProps {
 }
 
 export function PublicWeddingSite({ data }: PublicWeddingSiteProps) {
-  const { couple, events, photos, gifts, _validation } = data
+  const { couple, events, gifts, playlists, _validation } = data
 
   // Check data integrity
-  const integrityResult = checkPublicDataIntegrity(data)
+  checkPublicDataIntegrity(data)
   
   // Determine which sections have sufficient data
   const hasEvents = hasSufficientData(data, 'events')
@@ -114,11 +120,11 @@ export function PublicWeddingSite({ data }: PublicWeddingSiteProps) {
           </section>
         </PublicSiteErrorBoundary>
 
-        {/* Venue Section - Only show if there are venues */}
+        {/* Venue Carousel Section - Only show if there are venues */}
         {hasVenues && (
           <PublicSiteErrorBoundary>
             <section id="venues">
-              <VenueSection venues={events.venues} />
+              <VenueCarouselSection venues={events.venues} />
             </section>
           </PublicSiteErrorBoundary>
         )}
@@ -132,10 +138,29 @@ export function PublicWeddingSite({ data }: PublicWeddingSiteProps) {
           </PublicSiteErrorBoundary>
         )}
 
+        {/* Featured Playlist Section - Only show if there are playlists */}
+        {playlists?.playlists && playlists.playlists.length > 0 && (
+          <PublicSiteErrorBoundary>
+            <section id="playlist">
+              <FeaturedPlaylistSection 
+                playlists={playlists.playlists} 
+                coupleSlug={couple.couple_slug}
+              />
+            </section>
+          </PublicSiteErrorBoundary>
+        )}
+
         {/* Photo Gallery Section */}
         <PublicSiteErrorBoundary fallback={<PhotosFallback />}>
           <section id="photos">
             <PhotoGallerySection coupleSlug={couple.couple_slug} />
+          </section>
+        </PublicSiteErrorBoundary>
+
+        {/* Photo Upload Section */}
+        <PublicSiteErrorBoundary>
+          <section id="photo-upload">
+            <PhotoUploadSection coupleSlug={couple.couple_slug} coupleId={couple.id} />
           </section>
         </PublicSiteErrorBoundary>
 

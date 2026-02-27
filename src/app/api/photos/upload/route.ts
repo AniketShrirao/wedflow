@@ -25,64 +25,70 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const { photos } = body
 
-        // Get current photo collection
-        const { data: photoCollection, error: photoError } = await supabase
-            .from('photo_collections')
-            .select('*')
-            .eq('couple_id', couple.id)
-            .single()
-
-        if (photoError) {
-            return NextResponse.json({ error: 'Photo collection not found' }, { status: 404 })
+        if (!photos || !Array.isArray(photos) || photos.length === 0) {
+            return NextResponse.json({ error: 'No photos provided' }, { status: 400 })
         }
 
-        // Group photos by category
-        const photosByCategory: Record<string, any[]> = {}
-        photos.forEach((photo: any) => {
-            const categoryId = photo.category_id || 'other'
-            if (!photosByCategory[categoryId]) {
-                photosByCategory[categoryId] = []
-            }
-            photosByCategory[categoryId].push(photo)
-        })
+        // Get couple names to create initials
+        const { data: coupleData } = await supabase
+            .from('couples')
+            .select('partner1_name, partner2_name')
+            .eq('id', couple.id)
+            .single()
 
-        // Update the categories with new photos
-        const updatedCategories = (photoCollection.categories || []).map((category: any) => {
-            if (photosByCategory[category.id]) {
-                return {
-                    ...category,
-                    photos: [...(category.photos || []), ...photosByCategory[category.id]]
-                }
-            }
-            return category
-        })
+        // Create initials from couple names
+        const initials = coupleData
+            ? `${coupleData.partner1_name?.charAt(0) || ''}${coupleData.partner2_name?.charAt(0) || ''}`.toUpperCase()
+            : 'DU'
 
-        // Add any new categories that don't exist yet
-        Object.keys(photosByCategory).forEach(categoryId => {
-            if (!updatedCategories.find((cat: any) => cat.id === categoryId)) {
-                updatedCategories.push({
-                    id: categoryId,
-                    name: categoryId.charAt(0).toUpperCase() + categoryId.slice(1),
-                    photos: photosByCategory[categoryId]
-                })
-            }
-        })
-
-        // Update photo collection in database
-        const { data, error } = await supabase
-            .from('photo_collections')
-            .update({
-                categories: updatedCategories
+        // Create an upload session
+        const { data: upload, error: uploadError } = await supabase
+            .from('uploads')
+            .insert({
+                couple_id: couple.id,
+                uploader_name: initials,
+                upload_source: 'dashboard',
+                status: 'pending'
             })
-            .eq('couple_id', couple.id)
             .select()
             .single()
 
-        if (error) {
-            return NextResponse.json({ error: 'Failed to update photo collection' }, { status: 500 })
+        if (uploadError || !upload) {
+            return NextResponse.json({ error: 'Failed to create upload session' }, { status: 500 })
         }
 
-        return NextResponse.json({ success: true, data })
+        // Insert images
+        const imagesToInsert = photos.map((photo: any) => ({
+            upload_id: upload.id,
+            couple_id: couple.id,
+            filename: photo.filename || `photo_${Date.now()}`,
+            google_drive_file_id: photo.google_drive_file_id,
+            public_url: photo.public_url,
+            category: photo.category || 'Wedding',
+            folder: photo.folder,
+            is_highlighted: false
+        }))
+
+        const { data: insertedImages, error: imagesError } = await supabase
+            .from('images')
+            .insert(imagesToInsert)
+            .select()
+
+        if (imagesError) {
+            return NextResponse.json({ error: 'Failed to insert images' }, { status: 500 })
+        }
+
+        // Update upload status to completed
+        await supabase
+            .from('uploads')
+            .update({ status: 'completed' })
+            .eq('id', upload.id)
+
+        return NextResponse.json({
+            success: true,
+            uploadId: upload.id,
+            imageCount: insertedImages?.length || 0
+        })
     } catch (error) {
         console.error('Error uploading photos:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

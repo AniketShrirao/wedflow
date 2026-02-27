@@ -4,6 +4,7 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, MapPin } from 'lucide-react
 import { EventItem } from '@/lib/types/events'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import '@/styles/components/events-carousel.scss'
 
 interface EventsCarouselProps {
   events: EventItem[]
@@ -91,7 +92,7 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
             >
               {events.map((event, index) => (
                 <div key={event.id} className="w-full flex-shrink-0 px-2 md:px-4">
-                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+                  <div className="events-carousel__card">
                     <div className="grid md:grid-cols-2 gap-0">
                       {/* Event Details */}
                       <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
@@ -170,14 +171,14 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
             <>
               <button
                 onClick={prevSlide}
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-white/90 backdrop-blur-sm rounded-full shadow-xl flex items-center justify-center text-gray-800 hover:bg-white transition-all duration-300 hover:scale-110 z-10"
+                className="events-carousel__nav-button events-carousel__nav-button--prev"
                 aria-label="Previous event"
               >
                 <ChevronLeft className="h-6 w-6 md:h-7 md:w-7" />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-white/90 backdrop-blur-sm rounded-full shadow-xl flex items-center justify-center text-gray-800 hover:bg-white transition-all duration-300 hover:scale-110 z-10"
+                className="events-carousel__nav-button events-carousel__nav-button--next"
                 aria-label="Next event"
               >
                 <ChevronRight className="h-6 w-6 md:h-7 md:w-7" />

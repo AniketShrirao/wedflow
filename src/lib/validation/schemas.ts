@@ -22,14 +22,10 @@ export const VenueDataSchema = z.object({
 
 export const PhotoDataSchema = z.object({
     id: z.string().uuid().optional(),
-    name: z.string().min(1, 'Photo name is required').max(100, 'Photo name must be less than 100 characters'),
-    public_url: z.string().url('Invalid photo URL'),
-    thumbnail_url: z.string().url('Invalid thumbnail URL').optional(),
-    category: z.enum(['engagement', 'pre_wedding', 'ceremony', 'reception', 'highlights', 'other'], {
-        errorMap: () => ({ message: 'Invalid photo category' })
-    }),
-    couple_id: z.string().uuid(),
-    is_highlight: z.boolean().default(false)
+    filename: z.string().min(1, 'Photo filename is required').optional(),
+    public_url: z.string().url('Invalid photo URL').nullable().optional(),
+    category: z.string().min(1, 'Photo category is required'),
+    is_highlighted: z.boolean().default(false).optional()
 })
 
 export const GiftDataSchema = z.object({

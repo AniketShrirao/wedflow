@@ -114,26 +114,54 @@ export default function RootLayout({
                   }
                 });
 
-                // CSP violation reporting
-                document.addEventListener('securitypolicyviolation', function(event) {
-                  fetch('/api/monitoring/csp-violations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      documentURI: event.documentURI,
-                      referrer: event.referrer,
-                      blockedURI: event.blockedURI,
-                      violatedDirective: event.violatedDirective,
-                      originalPolicy: event.originalPolicy,
-                      sourceFile: event.sourceFile,
-                      lineNumber: event.lineNumber,
-                      columnNumber: event.columnNumber,
-                      timestamp: new Date().toISOString()
-                    })
-                  }).catch(function(error) {
-                    console.error('Failed to report CSP violation:', error);
+                // CSP violation reporting (debounced + deduplicated)
+                (function() {
+                  const win: any = window;
+                  if (!win.__cspReporting) {
+                    win.__cspReporting = { map: new Map(), timer: null };
+                  }
+
+                  document.addEventListener('securitypolicyviolation', function(event) {
+                    try {
+                      const key = (event.blockedURI || '') + '|' + (event.violatedDirective || '');
+                      const entry = {
+                        documentURI: event.documentURI,
+                        referrer: event.referrer,
+                        blockedURI: event.blockedURI,
+                        violatedDirective: event.violatedDirective,
+                        originalPolicy: event.originalPolicy,
+                        sourceFile: event.sourceFile,
+                        lineNumber: event.lineNumber,
+                        columnNumber: event.columnNumber,
+                        timestamp: new Date().toISOString()
+                      };
+
+                      win.__cspReporting.map.set(key, entry);
+
+                      if (win.__cspReporting.timer) return;
+
+                      win.__cspReporting.timer = setTimeout(function() {
+                        // Send one representative report for the gathered unique violations
+                        const first = win.__cspReporting.map.values().next().value;
+                        win.__cspReporting.map.clear();
+                        clearTimeout(win.__cspReporting.timer);
+                        win.__cspReporting.timer = null;
+
+                        if (first) {
+                          fetch('/api/monitoring/csp-violations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(first)
+                          }).catch(function(error) {
+                            console.error('Failed to report CSP violation:', error);
+                          });
+                        }
+                      }, 2000);
+                    } catch (e) {
+                      console.error('CSP reporting handler error', e);
+                    }
                   });
-                });
+                })();
 
                 // Global error handling
                 window.addEventListener('error', function(event) {

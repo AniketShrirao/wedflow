@@ -13,6 +13,7 @@ import {
   Settings,
   Home,
   Palette,
+  Music,
   X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Vendor Contacts', href: '/dashboard/contacts', icon: Contact },
   { name: 'Event Details', href: '/dashboard/events', icon: Calendar },
   { name: 'Photo Gallery', href: '/dashboard/photos', icon: Camera },
+  { name: 'Playlist Manager', href: '/dashboard/playlists', icon: Music },
   { name: 'Gift Portal', href: '/dashboard/gifts', icon: Gift },
   { name: 'Todo Planner', href: '/dashboard/todos', icon: CheckSquare },
   { name: 'Wedding Themes', href: '/dashboard/themes', icon: Palette },

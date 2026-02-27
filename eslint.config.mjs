@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Project-specific noisy folders
+    "public/**",
+    "scripts/**",
+    "supabase/**",
+    ".vscode/**",
+    ".git/**",
   ]),
 ]);
 

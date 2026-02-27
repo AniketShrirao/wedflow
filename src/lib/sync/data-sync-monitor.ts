@@ -54,9 +54,9 @@ class DataSyncMonitor {
             }
 
             // Get related data
-            const [eventDetails, photoCollection, giftSettings] = await Promise.all([
+            const [eventDetails, highlightedImages, giftSettings] = await Promise.all([
                 supabase.from('event_details').select('*').eq('couple_id', coupleId).single(),
-                supabase.from('photo_collections').select('*').eq('couple_id', coupleId).single(),
+                supabase.from('images').select('*').eq('couple_id', coupleId).eq('is_highlighted', true),
                 supabase.from('gift_settings').select('*').eq('couple_id', coupleId).single()
             ])
 
@@ -74,10 +74,10 @@ class DataSyncMonitor {
                     venues: [],
                     timeline: []
                 },
-                photos: photoCollection.data ? {
-                    categories: photoCollection.data.categories || [],
-                    highlight_photos: photoCollection.data.highlight_photos || []
-                } : null,
+                photos: {
+                    categories: [],
+                    highlight_photos: (highlightedImages.data || []).map(img => img.id)
+                },
                 gifts: giftSettings.data ? {
                     upi_id: giftSettings.data.upi_id,
                     qr_code_url: giftSettings.data.qr_code_url,
@@ -320,14 +320,7 @@ class DataSyncMonitor {
                 break
 
             case 'photos':
-                // Initialize empty photo collection
-                await supabase
-                    .from('photo_collections')
-                    .upsert({
-                        couple_id: coupleId,
-                        categories: [],
-                        highlight_photos: []
-                    })
+                // Photos are managed through the images table, no initialization needed
                 break
 
             case 'gifts':

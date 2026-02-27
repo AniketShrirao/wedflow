@@ -59,12 +59,13 @@ export async function GET(
             .eq('couple_id', couple.id)
             .single()
 
-        // Get photo collections
-        const { data: photoCollection } = await supabase
-            .from('photo_collections')
+        // Get highlighted images
+        const { data: highlightedImages } = await supabase
+            .from('images')
             .select('*')
             .eq('couple_id', couple.id)
-            .single()
+            .eq('is_highlighted', true)
+            .order('created_at', { ascending: false })
 
         // Get gift settings
         const { data: giftSettings } = await supabase
@@ -72,6 +73,13 @@ export async function GET(
             .select('*')
             .eq('couple_id', couple.id)
             .single()
+
+        // Get playlists
+        const { data: playlists } = await supabase
+            .from('playlists')
+            .select('*')
+            .eq('couple_id', couple.id)
+            .order('created_at', { ascending: false })
 
         // Parse JSON fields if they're stored as strings
         const parseJsonField = (field: any, fieldName: string = 'unknown') => {
@@ -87,11 +95,10 @@ export async function GET(
             return field
         }
 
-
-
         // Prepare public data (exclude sensitive information)
         const rawPublicData = {
             couple: {
+                id: couple.id,
                 partner1_name: couple.partner1_name,
                 partner2_name: couple.partner2_name,
                 wedding_date: couple.wedding_date,
@@ -103,18 +110,18 @@ export async function GET(
                 venues: parseJsonField(eventDetails?.venues, 'venues') || [],
                 timeline: parseJsonField(eventDetails?.timeline, 'timeline') || []
             },
-            photos: photoCollection ? {
-                categories: parseJsonField(photoCollection.categories, 'photo_categories') || [],
-                highlight_photos: parseJsonField(photoCollection.highlight_photos, 'highlight_photos') || []
-            } : {
+            photos: {
                 categories: [],
-                highlight_photos: []
+                highlight_photos: (highlightedImages || []).map(img => img.id)
             },
             gifts: giftSettings ? {
                 upi_id: giftSettings.upi_id,
                 qr_code_url: giftSettings.qr_code_url,
                 custom_message: giftSettings.custom_message
-            } : null
+            } : null,
+            playlists: {
+                playlists: playlists || []
+            }
         }
 
         // Validate and sanitize the data before sending

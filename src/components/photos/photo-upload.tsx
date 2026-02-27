@@ -100,11 +100,11 @@ export function PhotoUpload({
           targetCoupleId = couple.id
         }
         
-        // Fetch photo collection with drive folder URL
-        const { data: photoCollection, error } = await supabase
-          .from('photo_collections')
-          .select('drive_folder_url')
-          .eq('couple_id', targetCoupleId)
+        // Fetch couple with drive folder URL
+        const { data: couple, error } = await supabase
+          .from('couples')
+          .select('google_drive_folder_url')
+          .eq('id', targetCoupleId)
           .single()
         
         if (error) {
@@ -337,7 +337,7 @@ export function PhotoUpload({
             id: driveFile.id,
             name: driveFile.name,
             drive_file_id: driveFile.id,
-            public_url: driveFile.webContentLink || '',
+            public_url: `https://drive.google.com/uc?id=${driveFile.id}`,
             thumbnail_url: driveService.getThumbnailUrl(driveFile.id),
             category_id: fileCategory,
             uploaded_at: driveFile.createdTime,

@@ -29,42 +29,32 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Photo ID is required' }, { status: 400 })
         }
 
-        // Get current photo collection
-        const { data: photoCollection, error: fetchError } = await supabase
-            .from('photo_collections')
+        // Verify the photo belongs to this couple
+        const { data: photo, error: photoError } = await supabase
+            .from('images')
             .select('*')
+            .eq('id', photoId)
             .eq('couple_id', couple.id)
             .single()
 
-        if (fetchError || !photoCollection) {
-            return NextResponse.json({ error: 'Photo collection not found' }, { status: 404 })
+        if (photoError || !photo) {
+            return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
         }
 
-        // Remove photo from all categories
-        const updatedCategories = photoCollection.categories.map(category => ({
-            ...category,
-            photos: (category.photos || []).filter(photo => photo.id !== photoId)
-        }))
+        // Delete the image
+        const { error: deleteError } = await supabase
+            .from('images')
+            .delete()
+            .eq('id', photoId)
 
-        // Remove from highlights if present
-        const updatedHighlights = (photoCollection.highlight_photos || []).filter(id => id !== photoId)
-
-        // Update photo collection
-        const { data, error } = await supabase
-            .from('photo_collections')
-            .update({
-                categories: updatedCategories,
-                highlight_photos: updatedHighlights
-            })
-            .eq('couple_id', couple.id)
-            .select()
-            .single()
-
-        if (error) {
+        if (deleteError) {
             return NextResponse.json({ error: 'Failed to delete photo' }, { status: 500 })
         }
 
-        return NextResponse.json(data)
+        return NextResponse.json({
+            success: true,
+            message: 'Photo deleted successfully'
+        })
     } catch (error) {
         console.error('Error deleting photo:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

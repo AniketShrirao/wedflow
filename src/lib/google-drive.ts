@@ -260,6 +260,10 @@ export class GoogleDriveService {
      * Create a subfolder in the main wedding folder
      */
     async createSubfolder(parentFolderId: string, folderName: string): Promise<string> {
+        if (!window.gapi?.client?.drive) {
+            throw new Error('Google Drive API client not initialized. Please authenticate first.')
+        }
+
         const response = await window.gapi.client.drive.files.create({
             resource: {
                 name: folderName,
@@ -279,6 +283,10 @@ export class GoogleDriveService {
         folderId: string,
         onProgress?: (progress: number) => void
     ): Promise<DriveFile> {
+        if (!this.accessToken) {
+            throw new Error('Not authenticated with Google Drive. Please authenticate first.')
+        }
+
         const metadata = {
             name: file.name,
             parents: [folderId]
@@ -303,26 +311,40 @@ export class GoogleDriveService {
                     const result = JSON.parse(xhr.responseText)
                     console.log('Upload response:', result)
 
-                    // Fetch full file metadata to get webContentLink
-                    try {
-                        const fileMetadata = await window.gapi.client.drive.files.get({
-                            fileId: result.id,
-                            fields: 'id,name,mimeType,webViewLink,webContentLink,createdTime'
-                        })
+                    // Try to fetch full file metadata if API is available
+                    // Otherwise use the basic info from upload response
+                    if (window.gapi?.client?.drive) {
+                        try {
+                            const fileMetadata = await window.gapi.client.drive.files.get({
+                                fileId: result.id,
+                                fields: 'id,name,mimeType,webViewLink,webContentLink,createdTime'
+                            })
 
-                        console.log('File metadata:', fileMetadata.result)
+                            console.log('File metadata:', fileMetadata.result)
 
-                        resolve({
-                            id: fileMetadata.result.id,
-                            name: fileMetadata.result.name,
-                            mimeType: fileMetadata.result.mimeType,
-                            webViewLink: fileMetadata.result.webViewLink,
-                            webContentLink: fileMetadata.result.webContentLink,
-                            createdTime: fileMetadata.result.createdTime
-                        })
-                    } catch (error) {
-                        console.error('Error fetching file metadata:', error)
-                        // Fallback if metadata fetch fails
+                            resolve({
+                                id: fileMetadata.result.id,
+                                name: fileMetadata.result.name,
+                                mimeType: fileMetadata.result.mimeType,
+                                webViewLink: fileMetadata.result.webViewLink,
+                                webContentLink: fileMetadata.result.webContentLink,
+                                createdTime: fileMetadata.result.createdTime
+                            })
+                        } catch (error) {
+                            console.warn('Error fetching file metadata, using upload response:', error)
+                            // Fallback to upload response data
+                            resolve({
+                                id: result.id,
+                                name: result.name,
+                                mimeType: result.mimeType,
+                                webViewLink: result.webViewLink || '',
+                                webContentLink: result.webContentLink || '',
+                                createdTime: result.createdTime
+                            })
+                        }
+                    } else {
+                        // API not available, use upload response data
+                        console.log('Google Drive API not available, using upload response data')
                         resolve({
                             id: result.id,
                             name: result.name,
@@ -376,7 +398,7 @@ export class GoogleDriveService {
             }
         })
 
-        // Return direct link
+        // Return direct link without any parameters
         return `https://drive.google.com/uc?id=${fileId}`
     }
 
@@ -465,6 +487,56 @@ export class GoogleDriveService {
             console.error('Error getting or creating category folders:', error)
             // Fallback to creating all folders
             return this.setupCategoryFolders(mainFolderId, customFolders)
+        }
+    }
+
+    /**
+     * Create category folders (Haldi, Sangeet, Wedding, Reception) on first upload
+     * Returns mapping of category names to Google Drive folder IDs
+     */
+    async createCategoryFolders(mainFolderId: string): Promise<Record<string, string>> {
+        const categories = ['Haldi', 'Sangeet', 'Wedding', 'Reception']
+        const folderIds: Record<string, string> = {}
+        const errors: Array<{ category: string; error: Error }> = []
+
+        for (const category of categories) {
+            try {
+                const folderId = await this.createSubfolder(mainFolderId, category)
+                folderIds[category] = folderId
+                console.log(`Created folder for ${category}: ${folderId}`)
+            } catch (error) {
+                const err = error instanceof Error ? error : new Error(String(error))
+                errors.push({ category, error: err })
+                console.error(`Failed to create folder for ${category}:`, err)
+            }
+        }
+
+        // If all folders failed, throw error
+        if (errors.length === categories.length) {
+            throw new Error(`Failed to create all category folders: ${errors.map(e => e.error.message).join(', ')}`)
+        }
+
+        // Log partial failures but continue
+        if (errors.length > 0) {
+            console.warn(`Partial failure creating category folders: ${errors.map(e => `${e.category}: ${e.error.message}`).join(', ')}`)
+        }
+
+        return folderIds
+    }
+
+    /**
+     * Create a custom folder in Google Drive
+     * Returns the Google Drive folder ID
+     */
+    async createCustomFolder(parentFolderId: string, folderName: string): Promise<string> {
+        try {
+            const folderId = await this.createSubfolder(parentFolderId, folderName)
+            console.log(`Created custom folder "${folderName}": ${folderId}`)
+            return folderId
+        } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error))
+            console.error(`Failed to create custom folder "${folderName}":`, err)
+            throw new Error(`Failed to create custom folder "${folderName}": ${err.message}`)
         }
     }
 

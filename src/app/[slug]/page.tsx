@@ -7,9 +7,11 @@ interface PublicWeddingSitePageProps {
 
 async function getWeddingData(slug: string) {
   try {
+    const siteBase = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/public/${slug}`,
-      { 
+      `${siteBase}/api/public/${slug}`,
+      {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',

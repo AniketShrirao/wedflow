@@ -8,10 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { PhotoGallery } from './photo-gallery'
-import { PhotoUpload } from './photo-upload'
+import { UploadManager } from './upload-manager'
+import { UploadHistory } from './upload-history'
+import { CategoryManager } from './category-manager'
 import { PhotoCollection, Photo, PHOTO_CATEGORIES } from '@/lib/types/photos'
-import { Folder, Upload, Star, Settings, ExternalLink } from 'lucide-react'
+import { Folder, Upload, Star, Settings, ExternalLink, History } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { photoService, type Category } from '@/lib/services/photo-service'
+import { createClient } from '@/lib/supabase/client'
 
 export function PhotoManager() {
   const [photoCollection, setPhotoCollection] = useState<PhotoCollection | null>(null)
@@ -19,14 +23,45 @@ export function PhotoManager() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'gallery' | 'upload' | 'settings'>('upload')
+  const [activeTab, setActiveTab] = useState<'gallery' | 'upload' | 'history' | 'settings'>('upload')
+  const [coupleId, setCoupleId] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   const { toast } = useToast()
 
   useEffect(() => {
-    fetchPhotoCollection()
+    const initializeData = async () => {
+      const id = await fetchCoupleId()
+      if (id) {
+        await fetchPhotoCollection(id)
+      } else {
+        await fetchPhotoCollection()
+      }
+    }
+    initializeData()
   }, [])
 
-  const fetchPhotoCollection = async () => {
+  const fetchCoupleId = async (): Promise<string | null> => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: couple } = await supabase
+          .from('couples')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+        if (couple) {
+          setCoupleId(couple.id)
+          return couple.id
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching couple ID:', error)
+    }
+    return null
+  }
+
+  const fetchPhotoCollection = async (coupleIdParam?: string) => {
     try {
       setIsRefreshing(true)
       const response = await fetch('/api/photos')
@@ -34,6 +69,18 @@ export function PhotoManager() {
         const data = await response.json()
         setPhotoCollection(data)
         setDriveUrl(data.drive_folder_url || '')
+      }
+
+      // Fetch categories if couple ID is available
+      const idToUse = coupleIdParam || coupleId
+      if (idToUse) {
+        try {
+          const availableCategories = await photoService.getAvailableCategories(idToUse)
+          setCategories(availableCategories)
+        } catch (error) {
+          console.error('Error fetching categories:', error)
+          // Continue without categories - they're optional
+        }
       }
     } catch (error) {
       console.error('Failed to fetch photo collection:', error)
@@ -98,35 +145,19 @@ export function PhotoManager() {
     }
   }
 
-  const handleUploadComplete = async (photos: Photo[]) => {
+  const handleUploadComplete = async (uploadId: string, imageCount: number) => {
     try {
-      // Update the photo collection with new photos
-      const response = await fetch('/api/photos/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ photos })
+      // Refresh the photo collection to show new images
+      await fetchPhotoCollection()
+      toast({
+        title: 'Upload Complete',
+        description: `Successfully uploaded ${imageCount} photo(s)!`
       })
-
-      if (response.ok) {
-        await fetchPhotoCollection() // Refresh the collection
-        toast({
-          title: 'Upload Complete',
-          description: `Successfully uploaded ${photos.length} photo(s)!`
-        })
-      } else {
-        toast({
-          title: 'Upload Failed',
-          description: 'Failed to save uploaded photos',
-          variant: 'error'
-        })
-      }
     } catch (error) {
-      console.error('Failed to save uploaded photos:', error)
+      console.error('Failed to refresh photo collection:', error)
       toast({
         title: 'Error',
-        description: 'Failed to save uploaded photos',
+        description: 'Failed to refresh photo collection',
         variant: 'error'
       })
     }
@@ -153,7 +184,11 @@ export function PhotoManager() {
 
       if (response.ok) {
         const data = await response.json()
-        setPhotoCollection(data)
+        // Update the photo collection with new highlights
+        setPhotoCollection({
+          ...photoCollection,
+          highlight_photos: data.highlight_photos || newHighlights
+        })
         toast({
           title: 'Updated',
           description: currentHighlights.includes(photoId) ? 'Removed from highlights' : 'Added to highlights'
@@ -224,14 +259,15 @@ export function PhotoManager() {
 
   const stats = getPhotoStats()
 
-  // Set default tab based on whether photos exist
+  // Set default tab based on whether photos exist (only on initial load)
   useEffect(() => {
-    if (stats.total > 0) {
+    if (isLoading) return
+    
+    // Only set tab if it hasn't been explicitly set by user
+    if (activeTab === 'upload' && stats.total > 0) {
       setActiveTab('gallery')
-    } else {
-      setActiveTab('upload')
     }
-  }, [stats.total])
+  }, [isLoading])
 
   if (isLoading) {
     return (
@@ -267,8 +303,8 @@ export function PhotoManager() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'gallery' | 'upload' | 'settings')} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-auto p-1 gap-1 bg-muted rounded-lg">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'gallery' | 'upload' | 'history' | 'settings')} className="w-full">
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1 bg-muted rounded-lg">
           <TabsTrigger value="gallery" disabled={stats.total === 0} className="text-xs sm:text-sm py-2 px-1">
             <Folder className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Gallery</span>
@@ -278,6 +314,11 @@ export function PhotoManager() {
             <Upload className="h-4 w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Upload</span>
             <span className="sm:hidden">Up</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm py-2 px-1">
+            <History className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">History</span>
+            <span className="sm:hidden">Hist</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="text-xs sm:text-sm py-2 px-1">
             <Settings className="h-4 w-4 mr-1 sm:mr-2" />
@@ -334,11 +375,33 @@ export function PhotoManager() {
               </CardContent>
             </Card>
           ) : (
-            <PhotoUpload onUploadComplete={handleUploadComplete} />
+            <UploadManager
+              coupleId={coupleId || undefined}
+              uploaderName="Dashboard User"
+              uploadSource="dashboard"
+              onUploadComplete={handleUploadComplete}
+            />
           )}
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-4 sm:mt-6">
+        <TabsContent value="history" className="mt-6">
+          {isRefreshing ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin">
+                    <History className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">Loading upload history...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <UploadHistory coupleId={coupleId || undefined} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="settings" className="mt-4 sm:mt-6 space-y-6">
           {isRefreshing ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -351,6 +414,7 @@ export function PhotoManager() {
               </CardContent>
             </Card>
           ) : (
+          <>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -404,20 +468,40 @@ export function PhotoManager() {
               <div className="space-y-4">
                 <h3 className="font-semibold">Photo Categories</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {PHOTO_CATEGORIES.map(category => {
-                    const categoryData = photoCollection?.categories.find(cat => cat.id === category.id)
-                    const photoCount = categoryData?.photos?.length || 0
-                    
+                  {/* Always show default categories */}
+                  {['Haldi', 'Sangeet', 'Wedding', 'Reception'].map(defaultName => {
+                    const category = categories.find(c => c.category_name === defaultName)
                     return (
-                      <Card key={category.id}>
+                      <Card key={defaultName}>
                         <CardContent className="p-4 text-center">
-                          <h4 className="font-medium">{category.name}</h4>
-                          <p className="text-2xl font-bold text-primary">{photoCount}</p>
-                          <p className="text-xs text-muted-foreground">photos</p>
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" />
+                            <h4 className="font-medium">{defaultName}</h4>
+                          </div>
+                          <Badge variant="secondary" className="mb-2 text-xs">Default</Badge>
+                          <p className="text-xs text-muted-foreground">
+                            {category ? 'Created' : 'Not created'}
+                          </p>
                         </CardContent>
                       </Card>
                     )
                   })}
+                  
+                  {/* Show custom categories */}
+                  {categories.filter(c => c.category_type === 'custom').map(category => (
+                    <Card key={category.id}>
+                      <CardContent className="p-4 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Folder className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium">{category.category_name}</h4>
+                        </div>
+                        <Badge className="mb-2 text-xs">Custom</Badge>
+                        <p className="text-xs text-muted-foreground">
+                          Custom category
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
 
@@ -437,6 +521,9 @@ export function PhotoManager() {
               </div>
             </CardContent>
           </Card>
+
+          <CategoryManager coupleId={coupleId || undefined} />
+          </>
           )}
         </TabsContent>
       </Tabs>
