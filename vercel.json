@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "regions": ["iad1"],
   "functions": {
@@ -74,6 +74,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1"
   }
 }
