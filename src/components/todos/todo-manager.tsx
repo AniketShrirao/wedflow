@@ -41,7 +41,7 @@ export function TodoManager() {
 
             const response = await fetch(`/api/todos?${params}`)
             if (!response.ok) throw new Error('Failed to fetch tasks')
-            
+
             const data = await response.json()
             setTasks(data.tasks || [])
         } catch (error) {
@@ -58,7 +58,7 @@ export function TodoManager() {
         try {
             const response = await fetch('/api/todos/stats')
             if (!response.ok) throw new Error('Failed to fetch stats')
-            
+
             const data = await response.json()
             setStats(data.stats || {
                 total: 0,
@@ -167,7 +167,7 @@ export function TodoManager() {
             if (!response.ok) throw new Error('Failed to update task')
 
             // Update local state immediately for better UX
-            setTasks(prev => prev.map(task => 
+            setTasks(prev => prev.map(task =>
                 task.id === taskId ? { ...task, completed } : task
             ))
 
@@ -227,7 +227,7 @@ export function TodoManager() {
     const handleAddTasksFromTemplates = async (tasks: any[]) => {
         try {
             // Add each task via API
-            const promises = tasks.map(task => 
+            const promises = tasks.map(task =>
                 fetch('/api/todos', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -237,7 +237,7 @@ export function TodoManager() {
 
             const responses = await Promise.all(promises)
             const failedRequests = responses.filter(r => !r.ok)
-            
+
             if (failedRequests.length > 0) {
                 throw new Error(`Failed to create ${failedRequests.length} tasks`)
             }
@@ -251,9 +251,9 @@ export function TodoManager() {
 
     const customCategories = categories
         .map(cat => cat.name)
-        .filter(name => !['Venue & Catering', 'Photography & Videography', 'Decorations & Flowers', 
-                         'Music & Entertainment', 'Invitations & Stationery', 'Attire & Beauty', 
-                         'Transportation', 'Legal & Documentation', 'Honeymoon Planning', 'Miscellaneous'].includes(name))
+        .filter(name => !['Venue & Catering', 'Photography & Videography', 'Decorations & Flowers',
+            'Music & Entertainment', 'Invitations & Stationery', 'Attire & Beauty',
+            'Transportation', 'Legal & Documentation', 'Honeymoon Planning', 'Miscellaneous'].includes(name))
 
     return (
         <div className="space-y-6">
@@ -264,16 +264,16 @@ export function TodoManager() {
                 </div>
                 <div className="flex gap-2">
                     <div className="flex items-center gap-2">
-                    <DownloadButtons resource="todos" />
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={loadData}
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </Button>
+                        <DownloadButtons resource="todos" />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={loadData}
+                            disabled={loading}
+                        >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
                     </div>
                     <Button
                         variant="outline"

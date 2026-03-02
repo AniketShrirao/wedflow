@@ -58,7 +58,7 @@ export function ContactList({ initialContacts = [] }: ContactListProps) {
 
       const response = await fetch(`/api/contacts?${params}`)
       if (!response.ok) throw new Error('Failed to fetch contacts')
-      
+
       const data = await response.json()
       setContacts(data.contacts)
       setPagination(data.pagination)
@@ -82,7 +82,7 @@ export function ContactList({ initialContacts = [] }: ContactListProps) {
       })
 
       if (!response.ok) throw new Error('Failed to delete contact')
-      
+
       await fetchContacts()
     } catch (error) {
       console.error('Error deleting contact:', error)

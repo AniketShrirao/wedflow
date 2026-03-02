@@ -154,9 +154,9 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
 
   const fetchMetadata = async (url: string) => {
     const urlType = getUrlType(url)
-    
+
     setFetchingMetadata(true)
-    
+
     // Check for Google Drive folders
     if (url.includes('drive.google.com') && url.includes('/folders/')) {
       console.error('Google Drive folders cannot be played. Please use a direct file link.')
@@ -277,7 +277,7 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
     try {
       // Find or create custom playlist
       let customPlaylist = playlists.find(p => p.type === 'custom')
-      
+
       if (!customPlaylist) {
         // Create a custom playlist for guest suggestions
         const createRes = await fetch('/api/playlists', {
@@ -291,7 +291,7 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
             tracks: [],
           }),
         })
-        
+
         if (createRes.ok) {
           customPlaylist = await createRes.json()
           setPlaylists([...playlists, customPlaylist])
@@ -493,166 +493,166 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
       )}
 
       {activeTab === 'playlists' && (
-      <div className="playlist-manager__list">
-        {playlists.length === 0 ? (
-          <div className="playlist-manager__empty">
-            <p>No playlists yet. Create one to get started!</p>
-          </div>
-        ) : (
-          playlists.map((playlist) => (
-            <div key={playlist.id} className="playlist-manager__item">
-              <div className="playlist-manager__item-header">
-                <button
-                  onClick={() => setExpandedPlaylist(expandedPlaylist === playlist.id ? null : playlist.id)}
-                  className="playlist-manager__expand-button"
-                >
-                  <h3 className="playlist-manager__item-title">{playlist.name}</h3>
-                </button>
-                <div className="playlist-manager__item-actions">
-                  <button
-                    onClick={() => handleDeletePlaylist(playlist.id)}
-                    className="playlist-manager__delete-button"
-                    title="Delete playlist"
-                  >
-                    <Trash2 className="playlist-manager__action-icon" />
-                  </button>
-                </div>
-              </div>
-
-              {playlist.description && (
-                <p className="playlist-manager__item-description">{playlist.description}</p>
-              )}
-
-              <div className="playlist-manager__item-meta">
-                <span className="playlist-manager__meta-badge">{playlist.type}</span>
-                <span className="playlist-manager__meta-count">{playlist.tracks.length} tracks</span>
-              </div>
-
-              {expandedPlaylist === playlist.id && (
-                <>
-                  <div className="playlist-manager__tracks">
-                    {playlist.tracks.length === 0 ? (
-                      <p className="playlist-manager__no-tracks">No tracks yet</p>
-                    ) : (
-                      playlist.tracks.map((track) => (
-                        <div key={track.id} className="playlist-manager__track">
-                          <div className="playlist-manager__track-info">
-                            <p className="playlist-manager__track-title">{track.title}</p>
-                            <p className="playlist-manager__track-artist">{track.artist}</p>
-                            <p className="playlist-manager__track-duration">{track.duration}</p>
-                          </div>
-                          <div className="playlist-manager__track-actions">
-                            <button
-                              onClick={() => handlePlayTrack(playlist.id, track.id)}
-                              className="playlist-manager__track-play"
-                              title="Play track"
-                            >
-                              <Play className="playlist-manager__track-play-icon" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTrack(playlist.id, track.id)}
-                              className="playlist-manager__track-delete"
-                              title="Delete track"
-                            >
-                              <Trash2 className="playlist-manager__track-delete-icon" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {showTrackForm === playlist.id ? (
-                    <form onSubmit={(e) => handleAddTrack(playlist.id, e)} className="playlist-manager__track-form">
-                      <div className="playlist-manager__track-form-group">
-                        <input
-                          type="text"
-                          placeholder="Song Title"
-                          value={trackFormData.title}
-                          onChange={(e) => setTrackFormData({ ...trackFormData, title: e.target.value })}
-                          className="playlist-manager__track-input"
-                          required
-                        />
-                      </div>
-                      <div className="playlist-manager__track-form-group">
-                        <input
-                          type="url"
-                          placeholder="Media URL (YouTube, Google Drive file, or MP3)"
-                          value={trackFormData.youtubeUrl}
-                          onChange={(e) => {
-                            setTrackFormData({ ...trackFormData, youtubeUrl: e.target.value })
-                            if (e.target.value) {
-                              fetchMetadata(e.target.value)
-                            }
-                          }}
-                          className="playlist-manager__track-input"
-                          required
-                        />
-                      </div>
-                      
-                      {fetchingMetadata && (
-                        <div className="playlist-manager__metadata-loading">
-                          <p>Fetching video details...</p>
-                        </div>
-                      )}
-
-                      {trackMetadata.artist && (
-                        <div className="playlist-manager__metadata-display">
-                          <div className="playlist-manager__metadata-item">
-                            <span className="playlist-manager__metadata-label">Artist:</span>
-                            <span className="playlist-manager__metadata-value">{trackMetadata.artist}</span>
-                          </div>
-                          <div className="playlist-manager__metadata-item">
-                            <span className="playlist-manager__metadata-label">Duration:</span>
-                            <span className="playlist-manager__metadata-value">{trackMetadata.duration}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="playlist-manager__track-form-actions">
-                        <button 
-                          type="submit" 
-                          className="playlist-manager__track-submit"
-                          disabled={fetchingMetadata}
-                        >
-                          Add Track
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowTrackForm(null)
-                            setTrackFormData({ title: '', youtubeUrl: '' })
-                            setTrackMetadata({ artist: '', duration: '' })
-                          }}
-                          className="playlist-manager__track-cancel"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <button
-                      onClick={() => setShowTrackForm(playlist.id)}
-                      className="playlist-manager__add-track-button"
-                    >
-                      <Plus className="playlist-manager__button-icon" />
-                      Add Track
-                    </button>
-                  )}
-                </>
-              )}
+        <div className="playlist-manager__list">
+          {playlists.length === 0 ? (
+            <div className="playlist-manager__empty">
+              <p>No playlists yet. Create one to get started!</p>
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            playlists.map((playlist) => (
+              <div key={playlist.id} className="playlist-manager__item">
+                <div className="playlist-manager__item-header">
+                  <button
+                    onClick={() => setExpandedPlaylist(expandedPlaylist === playlist.id ? null : playlist.id)}
+                    className="playlist-manager__expand-button"
+                  >
+                    <h3 className="playlist-manager__item-title">{playlist.name}</h3>
+                  </button>
+                  <div className="playlist-manager__item-actions">
+                    <button
+                      onClick={() => handleDeletePlaylist(playlist.id)}
+                      className="playlist-manager__delete-button"
+                      title="Delete playlist"
+                    >
+                      <Trash2 className="playlist-manager__action-icon" />
+                    </button>
+                  </div>
+                </div>
+
+                {playlist.description && (
+                  <p className="playlist-manager__item-description">{playlist.description}</p>
+                )}
+
+                <div className="playlist-manager__item-meta">
+                  <span className="playlist-manager__meta-badge">{playlist.type}</span>
+                  <span className="playlist-manager__meta-count">{playlist.tracks.length} tracks</span>
+                </div>
+
+                {expandedPlaylist === playlist.id && (
+                  <>
+                    <div className="playlist-manager__tracks">
+                      {playlist.tracks.length === 0 ? (
+                        <p className="playlist-manager__no-tracks">No tracks yet</p>
+                      ) : (
+                        playlist.tracks.map((track) => (
+                          <div key={track.id} className="playlist-manager__track">
+                            <div className="playlist-manager__track-info">
+                              <p className="playlist-manager__track-title">{track.title}</p>
+                              <p className="playlist-manager__track-artist">{track.artist}</p>
+                              <p className="playlist-manager__track-duration">{track.duration}</p>
+                            </div>
+                            <div className="playlist-manager__track-actions">
+                              <button
+                                onClick={() => handlePlayTrack(playlist.id, track.id)}
+                                className="playlist-manager__track-play"
+                                title="Play track"
+                              >
+                                <Play className="playlist-manager__track-play-icon" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTrack(playlist.id, track.id)}
+                                className="playlist-manager__track-delete"
+                                title="Delete track"
+                              >
+                                <Trash2 className="playlist-manager__track-delete-icon" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {showTrackForm === playlist.id ? (
+                      <form onSubmit={(e) => handleAddTrack(playlist.id, e)} className="playlist-manager__track-form">
+                        <div className="playlist-manager__track-form-group">
+                          <input
+                            type="text"
+                            placeholder="Song Title"
+                            value={trackFormData.title}
+                            onChange={(e) => setTrackFormData({ ...trackFormData, title: e.target.value })}
+                            className="playlist-manager__track-input"
+                            required
+                          />
+                        </div>
+                        <div className="playlist-manager__track-form-group">
+                          <input
+                            type="url"
+                            placeholder="Media URL (YouTube, Google Drive file, or MP3)"
+                            value={trackFormData.youtubeUrl}
+                            onChange={(e) => {
+                              setTrackFormData({ ...trackFormData, youtubeUrl: e.target.value })
+                              if (e.target.value) {
+                                fetchMetadata(e.target.value)
+                              }
+                            }}
+                            className="playlist-manager__track-input"
+                            required
+                          />
+                        </div>
+
+                        {fetchingMetadata && (
+                          <div className="playlist-manager__metadata-loading">
+                            <p>Fetching video details...</p>
+                          </div>
+                        )}
+
+                        {trackMetadata.artist && (
+                          <div className="playlist-manager__metadata-display">
+                            <div className="playlist-manager__metadata-item">
+                              <span className="playlist-manager__metadata-label">Artist:</span>
+                              <span className="playlist-manager__metadata-value">{trackMetadata.artist}</span>
+                            </div>
+                            <div className="playlist-manager__metadata-item">
+                              <span className="playlist-manager__metadata-label">Duration:</span>
+                              <span className="playlist-manager__metadata-value">{trackMetadata.duration}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="playlist-manager__track-form-actions">
+                          <button
+                            type="submit"
+                            className="playlist-manager__track-submit"
+                            disabled={fetchingMetadata}
+                          >
+                            Add Track
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowTrackForm(null)
+                              setTrackFormData({ title: '', youtubeUrl: '' })
+                              setTrackMetadata({ artist: '', duration: '' })
+                            }}
+                            className="playlist-manager__track-cancel"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button
+                        onClick={() => setShowTrackForm(playlist.id)}
+                        className="playlist-manager__add-track-button"
+                      >
+                        <Plus className="playlist-manager__button-icon" />
+                        Add Track
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       )}
 
       {nowPlaying && getNowPlayingTrack() && (
-        <div 
+        <div
           className="playlist-manager__player-modal"
           onClick={() => setNowPlaying(null)}
         >
-          <div 
+          <div
             className="playlist-manager__player-content"
             onClick={(e) => e.stopPropagation()}
           >
@@ -671,7 +671,7 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
               {(() => {
                 const url = getNowPlayingTrack()?.youtubeUrl || ''
                 const urlType = getUrlType(url)
-                
+
                 if (urlType === 'youtube') {
                   return (
                     <iframe
@@ -700,7 +700,7 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
                         allow="autoplay; encrypted-media"
                         allowFullScreen
                       />
-                      <a 
+                      <a
                         href={downloadUrl}
                         target="_blank"
                         rel="noopener noreferrer"

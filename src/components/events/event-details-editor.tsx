@@ -37,10 +37,10 @@ export function EventDetailsEditor({ couple }: EventDetailsEditorProps) {
   const fetchEventDetails = async () => {
     try {
       const response = await fetch('/api/events')
-      
+
       if (response.ok) {
         const data = await response.json()
-        
+
         // Ensure we have the correct structure
         const eventDetails = {
           couple_intro: data.couple_intro || '',
@@ -48,7 +48,7 @@ export function EventDetailsEditor({ couple }: EventDetailsEditorProps) {
           venues: data.venues || [],
           timeline: data.timeline || []
         }
-        
+
         setEventData(eventDetails)
       }
     } catch (error) {
@@ -158,11 +158,10 @@ export function EventDetailsEditor({ couple }: EventDetailsEditorProps) {
             </div>
           </div>
           {saveMessage && (
-            <div className={`mt-4 p-3 rounded-md text-sm ${
-              saveMessage.includes('success') 
-                ? 'bg-green-50 text-green-800' 
+            <div className={`mt-4 p-3 rounded-md text-sm ${saveMessage.includes('success')
+                ? 'bg-green-50 text-green-800'
                 : 'bg-red-50 text-red-800'
-            }`}>
+              }`}>
               {saveMessage}
             </div>
           )}

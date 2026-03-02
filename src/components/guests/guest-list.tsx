@@ -61,7 +61,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
 
       const response = await fetch(`/api/guests?${params}`)
       if (!response.ok) throw new Error('Failed to fetch guests')
-      
+
       const data = await response.json()
       setGuests(data.guests)
       setPagination(data.pagination)
@@ -133,7 +133,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
       })
 
       if (!response.ok) throw new Error('Failed to delete guest')
-      
+
       await fetchGuests()
     } catch (error) {
       console.error('Error deleting guest:', error)
@@ -184,13 +184,13 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
       if (!response.ok) {
         throw new Error(result.error || 'Failed to send invitation')
       }
-      
+
       // Show success message
       alert(result.message || `Invitation sent successfully via ${method.toUpperCase()}`)
-      
+
       // Refresh the guest list
       await fetchGuests()
-      
+
       // Close the preview
       setShowInvitationPreview(false)
       setSelectedGuest(null)
