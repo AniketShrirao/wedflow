@@ -50,7 +50,7 @@ export function HeroSection({ couple, coupleIntro, availableSections }: HeroSect
       </div>
 
       {/* Animated Heart - travels with scroll */}
-      <AnimatedHeart 
+      <AnimatedHeart
         partner1={couple.partner1_name}
         partner2={couple.partner2_name}
       />
@@ -63,8 +63,8 @@ export function HeroSection({ couple, coupleIntro, availableSections }: HeroSect
           <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600 mb-4 animate-fade-in">
             {couple.partner1_name}
           </span>
-          <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-gray-300 font-light my-4">&</span>
-          <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <span className="block text-3xl p-10 sm:text-4xl md:text-5xl lg:text-6xl text-gray-300 font-light my-4">&</span>
+          <span className="block text-4xl p-10 sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {couple.partner2_name}
           </span>
         </h1>
@@ -102,7 +102,7 @@ export function HeroSection({ couple, coupleIntro, availableSections }: HeroSect
         {/* Scroll Indicator */}
         {firstAvailableSection && (
           <div className="animate-fade-in" style={{ animationDelay: '0.8s' }}>
-            <a 
+            <a
               href={`#${firstAvailableSection}`}
               className="inline-flex flex-col items-center text-gray-600 hover:text-pink-600 transition-colors duration-300 group"
               onClick={(e) => {

@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Plus, Edit, Trash2, MessageSquare, Phone } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, MessageSquare, Phone, Archive } from 'lucide-react'
 import { GuestForm } from './guest-form'
 import { BulkImport } from './bulk-import'
 import { InvitationPreview } from './invitation-preview'
+import { DownloadButtons } from './download-buttons'
 
 interface GuestListProps {
   initialGuests?: Guest[]
@@ -27,6 +28,7 @@ interface PaginationData {
 
 export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
@@ -73,6 +75,54 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   useEffect(() => {
     fetchGuests()
   }, [pagination.page, search, groupFilter, statusFilter])
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === guests.length) setSelectedIds([])
+    else setSelectedIds(guests.map(g => g.id))
+  }
+
+  const exportSelectedAsZip = async () => {
+    if (selectedIds.length === 0) return alert('No guests selected')
+    try {
+      const params = new URLSearchParams()
+      params.set('format', 'xlsx')
+      params.set('zip', 'true')
+      params.set('ids', selectedIds.join(','))
+      const url = `/api/export/guests?${params.toString()}`
+      const res = await fetch(url)
+      if (!res.ok) {
+        const body = await res.text().catch(() => '')
+        console.error('Export request failed', { status: res.status, body })
+        throw new Error(`Export failed: ${res.status} ${body}`)
+      }
+
+      // Prefer arrayBuffer -> Blob to preserve mime type
+      const buffer = await res.arrayBuffer()
+      const contentType = res.headers.get('Content-Type') || 'application/zip'
+      const contentDisposition = res.headers.get('Content-Disposition') || ''
+      let filename = `guests-selected.zip`
+      const match = /filename="?(.*?)"?$/.exec(contentDisposition)
+      if (match && match[1]) filename = match[1].replace(/"/g, '')
+
+      const blob = new Blob([buffer], { type: contentType })
+      const urlObj = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = urlObj
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      // cleanup
+      URL.revokeObjectURL(urlObj)
+    } catch (err) {
+      console.error('Bulk export error', err)
+      alert(err instanceof Error ? err.message : 'Export failed')
+    }
+  }
 
   const handleDeleteGuest = async (guestId: string) => {
     if (!confirm('Are you sure you want to delete this guest?')) return
@@ -166,6 +216,10 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
           <Button onClick={() => setShowGuestForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Guest
+          </Button>
+          <Button onClick={exportSelectedAsZip} variant="outline" disabled={selectedIds.length === 0}>
+            <Archive className="w-4 h-4 mr-2" />
+            Export Selected ({selectedIds.length})
           </Button>
         </div>
       </div>
@@ -262,6 +316,9 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>
+                      <input type="checkbox" checked={selectedIds.length === guests.length && guests.length > 0} onChange={toggleSelectAll} />
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
@@ -273,6 +330,9 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                 <TableBody>
                   {guests.map((guest) => (
                     <TableRow key={guest.id}>
+                      <TableCell>
+                        <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
+                      </TableCell>
                       <TableCell className="font-medium">{guest.name}</TableCell>
                       <TableCell>{guest.phone}</TableCell>
                       <TableCell>{guest.email || '-'}</TableCell>
@@ -304,6 +364,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                           >
                             <MessageSquare className="w-4 h-4" />
                           </Button>
+                          <DownloadButtons resource="guests" id={guest.id} />
                         </div>
                       </TableCell>
                     </TableRow>

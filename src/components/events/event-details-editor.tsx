@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ExternalLink, Save, Loader2 } from 'lucide-react'
+import { DownloadButtons } from '@/components/guests/download-buttons'
 import { Couple } from '@/lib/types/database'
 import { CoupleIntroEditor } from './couple-intro-editor'
 import { EventsEditor } from './events-editor'
@@ -153,6 +154,7 @@ export function EventDetailsEditor({ couple }: EventDetailsEditorProps) {
                 )}
                 Save Changes
               </Button>
+              <DownloadButtons resource="events" />
             </div>
           </div>
           {saveMessage && (

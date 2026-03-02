@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, RefreshCw, BookOpen } from 'lucide-react'
+import { DownloadButtons } from '@/components/guests/download-buttons'
 import { TaskForm, TaskFormData } from './task-form'
 import { TaskList } from './task-list'
 import { ProgressTracker } from './progress-tracker'
@@ -262,6 +263,8 @@ export function TodoManager() {
                     <p className="text-gray-600">Keep track of your wedding planning tasks and progress</p>
                 </div>
                 <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                    <DownloadButtons resource="todos" />
                     <Button
                         variant="outline"
                         size="sm"
@@ -271,6 +274,7 @@ export function TodoManager() {
                         <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                         Refresh
                     </Button>
+                    </div>
                     <Button
                         variant="outline"
                         onClick={() => setShowTemplateSelector(true)}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Music, Plus, Trash2, Play, X, Check, XCircle, Heart } from 'lucide-react'
+import { DownloadButtons } from '@/components/guests/download-buttons'
 import { Playlist } from '@/lib/types/playlist'
 import { Button } from '@/components/ui/button'
 import '@/styles/components/playlist-manager.scss'
@@ -353,13 +354,16 @@ export function PlaylistManager({ coupleId }: PlaylistManagerProps) {
           <Music className="playlist-manager__icon" />
           Playlist Manager
         </h2>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="playlist-manager__create-button"
-        >
-          <Plus className="playlist-manager__button-icon" />
-          Create Playlist
-        </Button>
+        <div className="playlist-manager__controls">
+          <DownloadButtons resource="songs" />
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            className="playlist-manager__create-button"
+          >
+            <Plus className="playlist-manager__button-icon" />
+            Create Playlist
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}

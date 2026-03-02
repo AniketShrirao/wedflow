@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { RefreshCw } from 'lucide-react'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -113,6 +114,12 @@ export function LoginForm() {
               Send Magic Link
             </Button>
           </div>
+          {isLoading && (
+            <div className="flex items-center space-x-2 mt-3 text-sm text-muted-foreground">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>Logging you in — this may take a moment.</span>
+            </div>
+          )}
         </form>
         <div className="mt-4 text-center text-sm">
           Don't have an account?{' '}

@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Plus, Edit, Trash2, Download, Phone, Mail } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Phone, Mail } from 'lucide-react'
+import { DownloadButtons } from '@/components/guests/download-buttons'
 import { ContactForm } from './contact-form'
 
 interface ContactListProps {
@@ -155,10 +156,7 @@ export function ContactList({ initialContacts = [] }: ContactListProps) {
           <p className="text-gray-600">Manage your wedding vendor contacts</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => handleExportContacts('csv')} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <DownloadButtons resource="vendor_contacts" apiPath="/api/contacts/export" primaryFormat="csv" secondaryFormat="json" zipFormat="csv" />
           <Button onClick={() => setShowContactForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Contact

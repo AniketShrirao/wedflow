@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
+import path from 'path'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
   // Ensure Turbopack uses the correct project root when multiple lockfiles exist
   turbopack: {
-    root: './'
+    root: path.resolve(__dirname)
   },
   typescript: {
     // skip type-errors during build/dev to reduce terminal noise
@@ -87,10 +86,14 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 2,
   },
 
+  // Reduce dev noise: do not run ESLint during builds/dev to avoid per-file lint output
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Suppress HTTPS warning in development
   devIndicators: {
-    buildActivity: true,
-    buildActivityPosition: 'bottom-right',
+    position: 'bottom-left',
   },
 
   // Bundle analyzer for production optimization
