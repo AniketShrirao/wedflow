@@ -7,6 +7,7 @@ interface BulkGuestData {
     phone: string
     email?: string
     group_name?: string
+    event_name?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -49,7 +50,8 @@ export async function POST(request: NextRequest) {
                     name: parts[0] || '',
                     phone: parts[1] || '',
                     email: parts[2] || undefined,
-                    group_name: parts[3] || undefined
+                    group_name: parts[3] || undefined,
+                    event_name: parts[4] || undefined
                 }
             }).filter((guest: BulkGuestData) => guest.name && guest.phone)
         }
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
                 phone: guest.phone,
                 email: guest.email || null,
                 group_name: guest.group_name || null,
+                event_name: guest.event_name || null,
                 invite_status: 'pending'
             })
         })

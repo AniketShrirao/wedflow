@@ -31,7 +31,7 @@ export async function PUT(
         }
 
         const body = await request.json()
-        const { name, phone, email, group_name, invite_status } = body
+        const { name, phone, email, group_name, event_name, invite_status } = body
 
         // Validate required fields
         if (!name || !phone) {
@@ -43,6 +43,7 @@ export async function PUT(
             phone,
             email: email || null,
             group_name: group_name || null,
+            event_name: event_name || null,
             invite_status: invite_status || 'pending'
         }
 

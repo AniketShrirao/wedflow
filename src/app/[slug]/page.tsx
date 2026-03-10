@@ -35,11 +35,15 @@ async function getWeddingData(slug: string) {
 
 export default async function PublicWeddingSitePage({
   params,
-}: PublicWeddingSitePageProps) {
+  searchParams
+}: PublicWeddingSitePageProps & { searchParams?: { [key: string]: string | string[] } }) {
   const { slug } = await params
   const data = await getPublicWeddingData(slug)
 
   if (!data) notFound()
 
-  return <PublicWeddingSite data={data} />
+  // If a guest query param is present, render an RSVP client-side component
+  const guestId = typeof searchParams?.guest === 'string' ? searchParams.guest : Array.isArray(searchParams?.guest) ? searchParams?.guest[0] : undefined
+
+  return <PublicWeddingSite data={data} guestId={guestId} />
 }

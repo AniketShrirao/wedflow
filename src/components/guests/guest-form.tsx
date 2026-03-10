@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState } from 'react'
 import { Guest } from '@/lib/types/database'
@@ -27,6 +27,7 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
     phone: guest?.phone || '',
     email: guest?.email || '',
     group_name: guest?.group_name || '',
+    event_name: guest?.event_name || '',
     invite_status: guest?.invite_status || 'pending'
   })
   const [loading, setLoading] = useState(false)
@@ -73,6 +74,7 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
           phone: formData.phone.trim(),
           email: formData.email.trim() || null,
           group_name: formData.group_name.trim() || null,
+          event_name: formData.event_name.trim() || null,
           invite_status: formData.invite_status
         }),
       })
@@ -165,6 +167,16 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
               value={formData.group_name}
               onChange={(e) => handleInputChange('group_name', e.target.value)}
               placeholder="e.g., Family, Friends, Colleagues"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="event">Event (Optional)</Label>
+            <Input
+              id="event"
+              value={formData.event_name}
+              onChange={(e) => handleInputChange('event_name', e.target.value)}
+              placeholder="e.g., Ceremony, Reception, Rehearsal Dinner"
             />
           </div>
 

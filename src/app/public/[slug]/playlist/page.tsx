@@ -10,13 +10,13 @@ async function getPlaylistsForCouple(coupleSlug: string) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-    
+
     // First, get couple ID from slug
     const coupleRes = await fetch(
       `${baseUrl}/api/public/${coupleSlug}`,
       { cache: 'no-store' }
     )
-    
+
     if (!coupleRes.ok) {
       console.error('Couple fetch failed:', coupleRes.status)
       throw new Error('Couple not found')
@@ -47,8 +47,8 @@ async function getPlaylistsForCouple(coupleSlug: string) {
 export default async function PlaylistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const { playlists, coupleId } = await getPlaylistsForCouple(slug)
-  
-  const allTracks = playlists.flatMap((playlist: Playlist) => 
+
+  const allTracks = playlists.flatMap((playlist: Playlist) =>
     (playlist.tracks || []).map((track: PlaylistTrack) => ({
       ...track,
       playlistName: playlist.name,

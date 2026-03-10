@@ -12,9 +12,11 @@ interface DownloadButtonsProps {
   primaryFormat?: 'xlsx' | 'pdf' | 'csv' | 'json'
   secondaryFormat?: 'xlsx' | 'pdf' | 'csv' | 'json'
   zipFormat?: 'xlsx' | 'pdf' | 'csv' | 'json'
+  showSecondary?: boolean
+  showZip?: boolean
 }
 
-export function DownloadButtons({ resource, id, className, apiPath, primaryFormat = 'xlsx', secondaryFormat = 'pdf', zipFormat = 'xlsx' }: DownloadButtonsProps) {
+export function DownloadButtons({ resource, id, className, apiPath, primaryFormat = 'xlsx', secondaryFormat = 'pdf', zipFormat = 'xlsx', showSecondary = true, showZip = true }: DownloadButtonsProps) {
   const [loading, setLoading] = useState(false)
 
   const download = async (format: string, zip = false) => {
@@ -58,14 +60,18 @@ export function DownloadButtons({ resource, id, className, apiPath, primaryForma
         <DownloadCloud className="w-4 h-4 mr-2" />
         <span>{primaryFormat === 'xlsx' ? 'Export' : primaryFormat.toUpperCase()}</span>
       </Button>
-      <Button size="sm" variant="outline" onClick={() => download(secondaryFormat as any)} disabled={loading} className="ml-2" title={`Download ${secondaryFormat?.toUpperCase()}`}>
-        <FileText className="w-4 h-4 mr-2" />
-        <span>{secondaryFormat.toUpperCase()}</span>
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => download(zipFormat as any, true)} disabled={loading} className="ml-2" title="Download ZIP">
-        <Archive className="w-4 h-4 mr-2" />
-        <span>ZIP</span>
-      </Button>
+      {showSecondary && !id && (
+        <Button size="sm" variant="outline" onClick={() => download(secondaryFormat as any)} disabled={loading} className="ml-2" title={`Download ${secondaryFormat?.toUpperCase()}`}>
+          <FileText className="w-4 h-4 mr-2" />
+          <span>{secondaryFormat.toUpperCase()}</span>
+        </Button>
+      )}
+      {showZip && !id && (
+        <Button size="sm" variant="outline" onClick={() => download(zipFormat as any, true)} disabled={loading} className="ml-2" title="Download ZIP">
+          <Archive className="w-4 h-4 mr-2" />
+          <span>ZIP</span>
+        </Button>
+      )}
     </div>
   )
 }

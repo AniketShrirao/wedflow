@@ -99,7 +99,6 @@ body {
 
 /* Better touch targets for mobile */
 @media (max-width: 768px) {
-
   button,
   a {
     min-height: 44px;
@@ -302,7 +301,6 @@ button:disabled {
 
 /* Better touch feedback */
 @media (hover: none) and (pointer: coarse) {
-
   button:active,
   a:active {
     transform: scale(0.95);
@@ -346,7 +344,6 @@ html {
 
 /* Animated heart floating animation */
 @keyframes heart-float {
-
   0%,
   100% {
     transform: translateY(0px);

@@ -21,6 +21,7 @@ CREATE TABLE guests (
   phone VARCHAR(20) NOT NULL,
   email VARCHAR(100),
   group_name VARCHAR(50),
+  event_name VARCHAR(100),
   invite_status VARCHAR(20) DEFAULT 'pending' CHECK (invite_status IN ('pending', 'sent', 'viewed')),
   invite_sent_at TIMESTAMP WITH TIME ZONE,
   invite_viewed_at TIMESTAMP WITH TIME ZONE,
@@ -90,6 +91,7 @@ CREATE INDEX idx_couples_user_id ON couples(user_id);
 CREATE INDEX idx_couples_slug ON couples(couple_slug);
 CREATE INDEX idx_guests_couple_id ON guests(couple_id);
 CREATE INDEX idx_guests_invite_status ON guests(invite_status);
+CREATE INDEX idx_guests_event_name ON guests(event_name);
 CREATE INDEX idx_vendor_contacts_couple_id ON vendor_contacts(couple_id);
 CREATE INDEX idx_vendor_contacts_category ON vendor_contacts(category);
 CREATE INDEX idx_event_details_couple_id ON event_details(couple_id);

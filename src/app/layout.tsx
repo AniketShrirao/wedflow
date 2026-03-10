@@ -4,7 +4,7 @@ import "./globals.scss";
 import { setupGlobalErrorHandling, performanceMonitor } from "@/lib/monitoring/error-tracking";
 import { setupCSPReporting } from "@/lib/security/security-headers";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
   preload: true
@@ -58,22 +58,22 @@ export default function RootLayout({
         {/* Preload critical resources */}
         <link rel="preload" href="/fonts/inter-regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/inter-semibold.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        
+
         {/* DNS prefetch for external domains */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//maps.googleapis.com" />
         <link rel="dns-prefetch" href="//drive.google.com" />
         <link rel="dns-prefetch" href="//cdn.sanity.io" />
-        
+
         {/* Preconnect to critical third-party origins */}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://maps.googleapis.com" />
-        
+
         {/* Security and performance meta tags */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="color-scheme" content="light dark" />
-        
+
         {/* Favicon and app icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -82,7 +82,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         {children}
-        
+
         {/* Initialize monitoring and security */}
         <script
           dangerouslySetInnerHTML={{

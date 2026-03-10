@@ -51,7 +51,8 @@ export function PublicFooter({ couple }: PublicFooterProps) {
                   fontFamily: 'var(--font-family-heading)',
                   background: 'linear-gradient(90deg, var(--color-primary-400) 0%, var(--color-error-400) 100%)',
                   WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text'
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
                 }}
               >
                 {couple.partner1_name}
@@ -72,7 +73,8 @@ export function PublicFooter({ couple }: PublicFooterProps) {
                   fontFamily: 'var(--font-family-heading)',
                   background: 'linear-gradient(90deg, var(--color-accent-400) 0%, var(--color-info-400) 100%)',
                   WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text'
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
                 }}
               >
                 {couple.partner2_name}
@@ -174,7 +176,8 @@ export function PublicFooter({ couple }: PublicFooterProps) {
                   style={{ 
                     background: 'linear-gradient(90deg, var(--color-primary-400) 0%, var(--color-accent-400) 100%)',
                     WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text'
+                    backgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
                   }}
                   target="_blank"
                   rel="noopener noreferrer"

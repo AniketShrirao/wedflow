@@ -52,7 +52,11 @@ interface PublicWeddingSiteProps {
   }
 }
 
-export function PublicWeddingSite({ data }: PublicWeddingSiteProps) {
+import dynamic from 'next/dynamic'
+
+const RSVP = dynamic(() => import('./rsvp').then(m => m.RSVP), { ssr: false })
+
+export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { guestId?: string }) {
   const { couple, events, gifts, playlists, _validation } = data
 
   // Check data integrity
@@ -107,6 +111,14 @@ export function PublicWeddingSite({ data }: PublicWeddingSiteProps) {
               }}
             />
           </section>
+        {/* If guestId is present, show RSVP UI */}
+        {guestId && (
+          <section id="rsvp" className="mt-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <RSVP coupleSlug={couple.couple_slug} guestId={guestId} />
+            </div>
+          </section>
+        )}
         </PublicSiteErrorBoundary>
 
         {/* Events Section */}

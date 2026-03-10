@@ -41,6 +41,7 @@ export interface Database {
                     phone: string
                     email: string | null
                     group_name: string | null
+                    event_name: string | null
                     invite_status: 'pending' | 'sent' | 'viewed'
                     invite_sent_at: string | null
                     invite_viewed_at: string | null
@@ -54,6 +55,7 @@ export interface Database {
                     phone: string
                     email?: string | null
                     group_name?: string | null
+                    event_name?: string | null
                     invite_status?: 'pending' | 'sent' | 'viewed'
                     invite_sent_at?: string | null
                     invite_viewed_at?: string | null
@@ -67,6 +69,7 @@ export interface Database {
                     phone?: string
                     email?: string | null
                     group_name?: string | null
+                    event_name?: string | null
                     invite_status?: 'pending' | 'sent' | 'viewed'
                     invite_sent_at?: string | null
                     invite_viewed_at?: string | null

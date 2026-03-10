@@ -78,7 +78,7 @@ export function BulkImport({ onComplete, onCancel }: BulkImportProps) {
   }
 
   const downloadTemplate = () => {
-    const csvContent = 'Name,Phone,Email,Group\nJohn Doe,+1234567890,john@example.com,Family\nJane Smith,+0987654321,jane@example.com,Friends'
+    const csvContent = 'Name,Phone,Email,Group,Event\nJohn Doe,+1234567890,john@example.com,Family,Ceremony\nJane Smith,+0987654321,jane@example.com,Friends,Reception'
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -144,11 +144,11 @@ export function BulkImport({ onComplete, onCancel }: BulkImportProps) {
                 id="textData"
                 value={textData}
                 onChange={(e) => setTextData(e.target.value)}
-                placeholder="Enter guest data in CSV format:&#10;Name, Phone, Email, Group&#10;John Doe, +1234567890, john@example.com, Family&#10;Jane Smith, +0987654321, jane@example.com, Friends"
+                placeholder="Enter guest data in CSV format:\nName, Phone, Email, Group, Event\nJohn Doe, +1234567890, john@example.com, Family, Ceremony\nJane Smith, +0987654321, jane@example.com, Friends, Reception"
                 className="min-h-[200px] font-mono text-sm"
               />
               <p className="text-sm text-gray-600">
-                Format: Name, Phone, Email (optional), Group (optional)
+                Format: Name, Phone, Email (optional), Group (optional), Event (optional)
                 <br />
                 Each guest should be on a separate line.
               </p>
@@ -199,8 +199,8 @@ export function BulkImport({ onComplete, onCancel }: BulkImportProps) {
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleTextImport} 
+          <Button
+            onClick={handleTextImport}
             disabled={loading || !textData.trim()}
           >
             {loading ? 'Importing...' : 'Import Guests'}

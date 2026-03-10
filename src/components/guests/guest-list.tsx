@@ -12,7 +12,6 @@ import { Search, Plus, Edit, Trash2, MessageSquare, Phone, Archive } from 'lucid
 import { GuestForm } from './guest-form'
 import { BulkImport } from './bulk-import'
 import { InvitationPreview } from './invitation-preview'
-import { DownloadButtons } from './download-buttons'
 
 interface GuestListProps {
   initialGuests?: Guest[]
@@ -32,6 +31,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
+  const [eventFilter, setEventFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
@@ -47,15 +47,17 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
 
   // Get unique groups for filter
   const uniqueGroups = Array.from(new Set(guests.map(g => g.group_name).filter(Boolean)))
+  const uniqueEvents = Array.from(new Set(guests.map(g => g.event_name).filter(Boolean)))
 
   const fetchGuests = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({
+        const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(search && { search }),
         ...(groupFilter && groupFilter !== 'all' && { group: groupFilter }),
+        ...(eventFilter && eventFilter !== 'all' && { event: eventFilter }),
         ...(statusFilter && statusFilter !== 'all' && { status: statusFilter })
       })
 
@@ -284,6 +286,17 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={eventFilter} onValueChange={setEventFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filter by event" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Events</SelectItem>
+                {uniqueEvents.map(ev => (
+                  <SelectItem key={ev} value={ev!}>{ev}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by status" />
@@ -323,6 +336,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Group</TableHead>
+                    <TableHead>Event</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -334,9 +348,19 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                         <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
                       </TableCell>
                       <TableCell className="font-medium">{guest.name}</TableCell>
-                      <TableCell>{guest.phone}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {guest.phone}
+                          {guest.phone ? (
+                            <a href={`tel:${guest.phone}`} className="text-blue-600 hover:text-blue-800">
+                              <Phone className="w-4 h-4" />
+                            </a>
+                          ) : null}
+                        </div>
+                      </TableCell>
                       <TableCell>{guest.email || '-'}</TableCell>
                       <TableCell>{guest.group_name || '-'}</TableCell>
+                      <TableCell>{guest.event_name || '-'}</TableCell>
                       <TableCell>{getStatusBadge(guest.invite_status)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -364,7 +388,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                           >
                             <MessageSquare className="w-4 h-4" />
                           </Button>
-                          <DownloadButtons resource="guests" id={guest.id} />
+                          {/* per-guest download removed */}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url)
         const search = searchParams.get('search') || ''
         const group = searchParams.get('group') || ''
+        const event = searchParams.get('event') || ''
         const status = searchParams.get('status') || ''
         const page = parseInt(searchParams.get('page') || '1')
         const limit = parseInt(searchParams.get('limit') || '10')
@@ -48,6 +49,10 @@ export async function GET(request: NextRequest) {
 
         if (group) {
             query = query.eq('group_name', group)
+        }
+
+        if (event) {
+            query = query.eq('event_name', event)
         }
 
         if (status) {
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { name, phone, email, group_name } = body
+        const { name, phone, email, group_name, event_name } = body
 
         // Validate required fields
         if (!name || !phone) {
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
             phone,
             email: email || null,
             group_name: group_name || null,
+            event_name: event_name || null,
             invite_status: 'pending'
         }
 

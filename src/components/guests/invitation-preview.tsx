@@ -124,7 +124,14 @@ ${coupleNames} ❤️`
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Phone:</span>
-                <span>{guest.phone}</span>
+                <div className="flex items-center gap-2">
+                  <span>{guest.phone}</span>
+                  {guest.phone ? (
+                    <a href={`tel:${guest.phone}`} className="text-blue-600 hover:text-blue-800">
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  ) : null}
+                </div>
               </div>
               {guest.email && (
                 <div className="flex justify-between">
