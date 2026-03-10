@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState } from 'react'
 import { Guest } from '@/lib/types/database'
@@ -56,7 +56,7 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setLoading(true)
@@ -109,8 +109,8 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
             {guest ? 'Edit Guest' : 'Add New Guest'}
           </DialogTitle>
           <DialogDescription>
-            {guest 
-              ? 'Update the guest information below.' 
+            {guest
+              ? 'Update the guest information below.'
               : 'Add a new guest to your wedding list.'
             }
           </DialogDescription>
@@ -183,8 +183,8 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
           {guest && (
             <div className="space-y-2">
               <Label htmlFor="status">Invitation Status</Label>
-              <Select 
-                value={formData.invite_status} 
+              <Select
+                value={formData.invite_status}
                 onValueChange={(value) => handleInputChange('invite_status', value)}
               >
                 <SelectTrigger>

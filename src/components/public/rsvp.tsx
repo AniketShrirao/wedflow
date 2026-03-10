@@ -30,7 +30,7 @@ export function RSVP({ coupleSlug, guestId }: { coupleSlug: string; guestId: str
         if (mounted) setGuest(data.guest)
 
         // Mark invite viewed (best-effort)
-        fetch('/api/public/invite-viewed', { method: 'POST', body: JSON.stringify({ guestId }), headers: { 'Content-Type': 'application/json' } }).catch(() => {})
+        fetch('/api/public/invite-viewed', { method: 'POST', body: JSON.stringify({ guestId }), headers: { 'Content-Type': 'application/json' } }).catch(() => { })
       } catch (err) {
         console.error('Failed to load guest', err)
       }

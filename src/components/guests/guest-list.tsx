@@ -52,7 +52,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const fetchGuests = async () => {
     setLoading(true)
     try {
-        const params = new URLSearchParams({
+      const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(search && { search }),

@@ -61,7 +61,7 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
 
   // Check data integrity
   checkPublicDataIntegrity(data)
-  
+
   // Determine which sections have sufficient data
   const hasEvents = hasSufficientData(data, 'events')
   const hasVenues = hasSufficientData(data, 'venues')
@@ -76,7 +76,7 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
         {_validation?.warnings && _validation.warnings.length > 0 && (
           <div className="bg-yellow-50 border-b border-yellow-200 p-4">
             <div className="max-w-6xl mx-auto">
-              <ValidationErrorDisplay 
+              <ValidationErrorDisplay
                 errors={[]}
                 warnings={_validation.warnings}
                 className="mb-0"
@@ -86,7 +86,7 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
         )}
 
         {/* Floating Navigation - Pass available sections */}
-        <FloatingNav 
+        <FloatingNav
           availableSections={{
             events: hasEvents,
             venues: hasVenues,
@@ -95,11 +95,11 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
             gifts: hasGifts
           }}
         />
-        
+
         {/* Hero Section */}
         <PublicSiteErrorBoundary fallback={<div className="h-screen bg-gray-100 flex items-center justify-center">Hero section unavailable</div>}>
           <section id="hero">
-            <HeroSection 
+            <HeroSection
               couple={couple}
               coupleIntro={events.couple_intro || "We are excited to share our special day with you. Join us as we begin our journey together as one."}
               availableSections={{
@@ -111,14 +111,14 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
               }}
             />
           </section>
-        {/* If guestId is present, show RSVP UI */}
-        {guestId && (
-          <section id="rsvp" className="mt-8">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <RSVP coupleSlug={couple.couple_slug} guestId={guestId} />
-            </div>
-          </section>
-        )}
+          {/* If guestId is present, show RSVP UI */}
+          {guestId && (
+            <section id="rsvp" className="mt-8">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <RSVP coupleSlug={couple.couple_slug} guestId={guestId} />
+              </div>
+            </section>
+          )}
         </PublicSiteErrorBoundary>
 
         {/* Events Section */}
@@ -154,8 +154,8 @@ export function PublicWeddingSite({ data, guestId }: PublicWeddingSiteProps & { 
         {playlists?.playlists && playlists.playlists.length > 0 && (
           <PublicSiteErrorBoundary>
             <section id="playlist">
-              <FeaturedPlaylistSection 
-                playlists={playlists.playlists} 
+              <FeaturedPlaylistSection
+                playlists={playlists.playlists}
                 coupleSlug={couple.couple_slug}
               />
             </section>

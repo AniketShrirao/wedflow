@@ -22,27 +22,27 @@ interface InvitationPreviewProps {
   onSendInvitation?: (guest: Guest, method: 'whatsapp' | 'sms') => void
 }
 
-export function InvitationPreview({ 
-  guest, 
-  couple, 
-  onClose, 
-  onSendInvitation 
+export function InvitationPreview({
+  guest,
+  couple,
+  onClose,
+  onSendInvitation
 }: InvitationPreviewProps) {
   const [loading, setLoading] = useState(false)
 
   // Generate invitation URL
   const invitationUrl = `${window.location.origin}/${couple.couple_slug}?guest=${guest.id}`
-  
+
   // Generate personalized message
   const generateMessage = () => {
     const coupleNames = `${couple.partner1_name} & ${couple.partner2_name}`
-    const weddingDate = couple.wedding_date 
+    const weddingDate = couple.wedding_date
       ? new Date(couple.wedding_date).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
       : 'our special day'
 
     return `🎉 You're Invited! 🎉
@@ -149,7 +149,7 @@ ${coupleNames} ❤️`
                 <span className="font-medium">Status:</span>
                 <Badge variant={
                   guest.invite_status === 'sent' ? 'default' :
-                  guest.invite_status === 'viewed' ? 'secondary' : 'outline'
+                    guest.invite_status === 'viewed' ? 'secondary' : 'outline'
                 }>
                   {guest.invite_status}
                 </Badge>
