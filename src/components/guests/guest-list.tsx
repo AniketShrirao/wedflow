@@ -27,6 +27,7 @@ interface PaginationData {
 
 export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
+  const [allGuests, setAllGuests] = useState<Guest[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -48,9 +49,16 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [showInvitationPreview, setShowInvitationPreview] = useState(false)
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null)
 
-  // Get unique groups for filter
-  const uniqueGroups = Array.from(new Set(guests.map(g => g.group_name).filter(Boolean)))
-  const uniqueEvents = Array.from(new Set(guests.map(g => g.event_name).filter(Boolean)))
+  // Get unique groups/events for filter (derived from full list when available)
+  const uniqueGroups = useMemo(() => {
+    const source = allGuests.length > 0 ? allGuests : guests
+    return Array.from(new Set(source.map(g => g.group_name).filter(Boolean)))
+  }, [allGuests, guests])
+
+  const uniqueEvents = useMemo(() => {
+    const source = allGuests.length > 0 ? allGuests : guests
+    return Array.from(new Set(source.map(g => g.event_name).filter(Boolean)))
+  }, [allGuests, guests])
 
   const fetchGuests = async () => {
     setLoading(true)
@@ -69,6 +77,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
 
       const data = await response.json()
       setGuests(data.guests)
+      // keep pagination values from server but we'll also maintain total based on allGuests when available
       setPagination(data.pagination)
     } catch (error) {
       console.error('Error fetching guests:', error)
@@ -77,13 +86,37 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
     }
   }
 
+  const fetchAllGuests = async () => {
+    try {
+      const params = new URLSearchParams({
+        ...(search && { search }),
+        ...(groupFilter && groupFilter !== 'all' && { group: groupFilter }),
+        ...(eventFilter && eventFilter !== 'all' && { event: eventFilter }),
+        ...(statusFilter && statusFilter !== 'all' && { status: statusFilter }),
+        limit: '10000',
+        page: '1'
+      })
+
+      const response = await fetch(`/api/guests?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch all guests')
+      const data = await response.json()
+      setAllGuests(Array.isArray(data.guests) ? data.guests : [])
+      // update pagination total based on full list
+      setPagination(prev => ({ ...prev, total: Array.isArray(data.guests) ? data.guests.length : prev.total, totalPages: Math.ceil((Array.isArray(data.guests) ? data.guests.length : prev.total) / prev.limit) }))
+    } catch (err) {
+      console.error('Error fetching all guests:', err)
+    }
+  }
+
   useEffect(() => {
     fetchGuests()
+    fetchAllGuests()
   }, [pagination.page, search, groupFilter, eventFilter, statusFilter])
 
-  // compute sorted and optionally grouped guests for display
+  // compute sorted full list and then paginate for display
   const displayedGuests = useMemo(() => {
-    const arr = [...guests]
+    const source = allGuests.length > 0 ? allGuests : guests
+    const arr = [...source]
 
     const getField = (g: Guest, key: string) => {
       switch (key) {
@@ -96,22 +129,25 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
     }
 
     arr.sort((a, b) => {
-      const fa = getField(a, sortBy === 'group' ? 'group' : (sortBy === 'event' ? 'event' : sortBy))
-      const fb = getField(b, sortBy === 'group' ? 'group' : (sortBy === 'event' ? 'event' : sortBy))
+      const key = sortBy === 'group' ? 'group' : (sortBy === 'event' ? 'event' : sortBy)
+      const fa = getField(a, key)
+      const fb = getField(b, key)
       if (fa < fb) return sortOrder === 'asc' ? -1 : 1
       if (fa > fb) return sortOrder === 'asc' ? 1 : -1
       return 0
     })
 
-    return arr
-  }, [guests, sortBy, sortOrder])
+    // apply pagination slice
+    const offset = (pagination.page - 1) * pagination.limit
+    return arr.slice(offset, offset + pagination.limit)
+  }, [allGuests, guests, sortBy, sortOrder, pagination.page, pagination.limit])
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
   const toggleSelectAll = () => {
-    const ids = displayedGuests.map(g => g.id)
+    const ids = (allGuests.length > 0 ? allGuests : displayedGuests).map(g => g.id)
     if (ids.length === 0) return
     if (ids.every(id => selectedIds.includes(id))) setSelectedIds(prev => prev.filter(id => !ids.includes(id)))
     else setSelectedIds(prev => Array.from(new Set([...prev, ...ids])))
@@ -167,6 +203,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
       if (!response.ok) throw new Error('Failed to delete guest')
 
       await fetchGuests()
+      await fetchAllGuests()
     } catch (error) {
       console.error('Error deleting guest:', error)
       alert('Failed to delete guest')
@@ -177,11 +214,13 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
     setShowGuestForm(false)
     setEditingGuest(null)
     fetchGuests()
+    fetchAllGuests()
   }
 
   const handleBulkImportComplete = () => {
     setShowBulkImport(false)
     fetchGuests()
+    fetchAllGuests()
   }
 
   const getStatusBadge = (status: string) => {
@@ -222,6 +261,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
 
       // Refresh the guest list
       await fetchGuests()
+      await fetchAllGuests()
 
       // Close the preview
       setShowInvitationPreview(false)
@@ -393,7 +433,11 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead>
-                        <input type="checkbox" checked={selectedIds.length === displayedGuests.length && displayedGuests.length > 0} onChange={toggleSelectAll} />
+                        <input
+                          type="checkbox"
+                          checked={allGuests.length > 0 ? (selectedIds.length === allGuests.length && allGuests.length > 0) : (selectedIds.length === displayedGuests.length && displayedGuests.length > 0)}
+                          onChange={toggleSelectAll}
+                        />
                       </TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Phone</TableHead>
