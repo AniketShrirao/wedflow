@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Guest } from '@/lib/types/database'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +33,9 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [groupFilter, setGroupFilter] = useState('all')
   const [eventFilter, setEventFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'name'|'group'|'event'|'created_at'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc'|'desc'>('asc')
+  const [groupBy, setGroupBy] = useState<'none'|'group'|'event'>('none')
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 10,
@@ -76,15 +79,42 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
 
   useEffect(() => {
     fetchGuests()
-  }, [pagination.page, search, groupFilter, statusFilter])
+  }, [pagination.page, search, groupFilter, eventFilter, statusFilter])
+
+  // compute sorted and optionally grouped guests for display
+  const displayedGuests = useMemo(() => {
+    const arr = [...guests]
+
+    const getField = (g: Guest, key: string) => {
+      switch (key) {
+        case 'name': return (g.name || '').toLowerCase()
+        case 'group': return (g.group_name || '').toLowerCase()
+        case 'event': return (g.event_name || '').toLowerCase()
+        case 'created_at': return (g.created_at || '') as any
+        default: return ''
+      }
+    }
+
+    arr.sort((a, b) => {
+      const fa = getField(a, sortBy === 'group' ? 'group' : (sortBy === 'event' ? 'event' : sortBy))
+      const fb = getField(b, sortBy === 'group' ? 'group' : (sortBy === 'event' ? 'event' : sortBy))
+      if (fa < fb) return sortOrder === 'asc' ? -1 : 1
+      if (fa > fb) return sortOrder === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return arr
+  }, [guests, sortBy, sortOrder])
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === guests.length) setSelectedIds([])
-    else setSelectedIds(guests.map(g => g.id))
+    const ids = displayedGuests.map(g => g.id)
+    if (ids.length === 0) return
+    if (ids.every(id => selectedIds.includes(id))) setSelectedIds(prev => prev.filter(id => !ids.includes(id)))
+    else setSelectedIds(prev => Array.from(new Set([...prev, ...ids])))
   }
 
   const exportSelectedAsZip = async () => {
@@ -308,6 +338,38 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                 <SelectItem value="viewed">Viewed</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger className="w-full md:w-44">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="group">Group</SelectItem>
+                <SelectItem value="event">Event</SelectItem>
+                <SelectItem value="created_at">Created</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as any)}>
+              <SelectTrigger className="w-full md:w-32">
+                <SelectValue placeholder="Order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Asc</SelectItem>
+                <SelectItem value="desc">Desc</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
+              <SelectTrigger className="w-full md:w-40">
+                <SelectValue placeholder="Group by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Grouping</SelectItem>
+                <SelectItem value="group">Group</SelectItem>
+                <SelectItem value="event">Event</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -326,75 +388,127 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <input type="checkbox" checked={selectedIds.length === guests.length && guests.length > 0} onChange={toggleSelectAll} />
-                    </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Group</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {guests.map((guest) => (
-                    <TableRow key={guest.id}>
-                      <TableCell>
-                        <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
-                      </TableCell>
-                      <TableCell className="font-medium">{guest.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {guest.phone}
-                          {guest.phone ? (
-                            <a href={`tel:${guest.phone}`} className="text-blue-600 hover:text-blue-800">
-                              <Phone className="w-4 h-4" />
-                            </a>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell>{guest.email || '-'}</TableCell>
-                      <TableCell>{guest.group_name || '-'}</TableCell>
-                      <TableCell>{guest.event_name || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(guest.invite_status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingGuest(guest)
-                              setShowGuestForm(true)
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteGuest(guest.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleShowInvitationPreview(guest)}
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </Button>
-                          {/* per-guest download removed */}
-                        </div>
-                      </TableCell>
+              {groupBy === 'none' ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <input type="checkbox" checked={selectedIds.length === displayedGuests.length && displayedGuests.length > 0} onChange={toggleSelectAll} />
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Group</TableHead>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {displayedGuests.map((guest) => (
+                      <TableRow key={guest.id}>
+                        <TableCell>
+                          <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
+                        </TableCell>
+                        <TableCell className="font-medium">{guest.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {guest.phone}
+                            {guest.phone ? (
+                              <a href={`tel:${guest.phone}`} className="text-blue-600 hover:text-blue-800">
+                                <Phone className="w-4 h-4" />
+                              </a>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell>{guest.email || '-'}</TableCell>
+                        <TableCell>{guest.group_name || '-'}</TableCell>
+                        <TableCell>{guest.event_name || '-'}</TableCell>
+                        <TableCell>{getStatusBadge(guest.invite_status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingGuest(guest)
+                                setShowGuestForm(true)
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteGuest(guest.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleShowInvitationPreview(guest)}
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                // Grouped view
+                Object.entries(displayedGuests.reduce<Record<string, Guest[]>>((acc, g) => {
+                  const key = groupBy === 'group' ? (g.group_name || 'Ungrouped') : (g.event_name || 'No Event')
+                  if (!acc[key]) acc[key] = []
+                  acc[key].push(g)
+                  return acc
+                }, {})).map(([groupKey, groupGuests]) => (
+                  <div key={groupKey} className="mb-6">
+                    <div className="text-lg font-semibold mb-2">{groupKey} ({groupGuests.length})</div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <input type="checkbox" checked={groupGuests.every(g => selectedIds.includes(g.id)) && groupGuests.length>0} onChange={() => {
+                              // toggle group selection
+                              const ids = groupGuests.map(g => g.id)
+                              const allSelected = ids.every(id => selectedIds.includes(id))
+                              setSelectedIds(prev => allSelected ? prev.filter(id => !ids.includes(id)) : Array.from(new Set([...prev, ...ids])))
+                            }} />
+                          </TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Phone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {groupGuests.map(guest => (
+                          <TableRow key={guest.id}>
+                            <TableCell>
+                              <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
+                            </TableCell>
+                            <TableCell className="font-medium">{guest.name}</TableCell>
+                            <TableCell>{guest.phone || '-'}</TableCell>
+                            <TableCell>{guest.email || '-'}</TableCell>
+                            <TableCell>{getStatusBadge(guest.invite_status)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button size="sm" variant="outline" onClick={() => { setEditingGuest(guest); setShowGuestForm(true) }}><Edit className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" onClick={() => handleDeleteGuest(guest.id)}><Trash2 className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" onClick={() => handleShowInvitationPreview(guest)}><MessageSquare className="w-4 h-4" /></Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
