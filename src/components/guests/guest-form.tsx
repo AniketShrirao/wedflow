@@ -162,22 +162,40 @@ export function GuestForm({ guest, onSave, onCancel }: GuestFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="group">Group (Optional)</Label>
-            <Input
-              id="group"
+            <Select
               value={formData.group_name}
-              onChange={(e) => handleInputChange('group_name', e.target.value)}
-              placeholder="e.g., Family, Friends, Colleagues"
-            />
+              onValueChange={(value) => handleInputChange('group_name', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Fam">Fam (Family)</SelectItem>
+                <SelectItem value="Friends">Friends</SelectItem>
+                <SelectItem value="Colleagues">Colleagues</SelectItem>
+                <SelectItem value="Close Relative">Close Relative</SelectItem>
+                <SelectItem value="Relatives">Relatives</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="event">Event (Optional)</Label>
-            <Input
-              id="event"
+            <Select
               value={formData.event_name}
-              onChange={(e) => handleInputChange('event_name', e.target.value)}
-              placeholder="e.g., Ceremony, Reception, Rehearsal Dinner"
-            />
+              onValueChange={(value) => handleInputChange('event_name', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an event" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Engagement">Engagement</SelectItem>
+                <SelectItem value="Wedding">Wedding</SelectItem>
+                <SelectItem value="Sangeet">Sangeet</SelectItem>
+                <SelectItem value="Haldi">Haldi</SelectItem>
+                <SelectItem value="Reception">Reception</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {guest && (
