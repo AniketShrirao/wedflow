@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Plus, Edit, Trash2, MessageSquare, Phone, Archive } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, MessageSquare, Phone, Archive, UserX } from 'lucide-react'
 import { GuestForm } from './guest-form'
 import { BulkImport } from './bulk-import'
 import { InvitationPreview } from './invitation-preview'
@@ -29,14 +29,35 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
   const [allGuests, setAllGuests] = useState<Guest[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  // Helper: count child/+1 guests in all guest names (after '&')
+  const getChildPlusOneCount = (guestsArr: Guest[]) => {
+    let count = 0;
+    for (const g of guestsArr) {
+      if (g.name && g.name.includes('&')) {
+        // Count how many people after '&' (e.g. "John & 2 kids" or "Jane & +1")
+        // We'll count 1 for any '&' unless a number is present after it
+        const after = g.name.split('&')[1]?.trim() || '';
+        // Try to extract a number (e.g. "2 kids", "+1", "1 child")
+        const numMatch = after.match(/([+]?\d+)/);
+        if (numMatch) {
+          count += parseInt(numMatch[1], 10);
+        } else {
+          // If no number, count as 1 extra
+          count += 1;
+        }
+      }
+    }
+    return count;
+  };
+
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('all')
   const [eventFilter, setEventFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [sortBy, setSortBy] = useState<'name'|'group'|'event'|'created_at'>('name')
-  const [sortOrder, setSortOrder] = useState<'asc'|'desc'>('asc')
-  const [groupBy, setGroupBy] = useState<'none'|'group'|'event'>('none')
+  const [sortBy, setSortBy] = useState<'name' | 'group' | 'event' | 'created_at'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [groupBy, setGroupBy] = useState<'none' | 'group' | 'event'>('none')
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 10,
@@ -48,7 +69,15 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null)
   const [showInvitationPreview, setShowInvitationPreview] = useState(false)
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null)
-
+  const [absenteeIds, setAbsenteeIds] = useState<string[]>([])
+  // Mark guest as absentee (strikethrough row)
+  const toggleAbsentee = (guestId: string) => {
+    setAbsenteeIds(prev => prev.includes(guestId) ? prev.filter(id => id !== guestId) : [...prev, guestId])
+  }
+  // Compute counts for display (after all state is initialized)
+  const totalGuests = pagination?.total;
+  const childPlusOneCount = getChildPlusOneCount(allGuests.length > 0 ? allGuests : guests);
+  const totalWithChildren = totalGuests + childPlusOneCount;
   // Get unique groups/events for filter (derived from full list when available)
   const uniqueGroups = useMemo(() => {
     const source = allGuests.length > 0 ? allGuests : guests
@@ -273,6 +302,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
   }
 
   return (
+
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -300,8 +330,20 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{pagination.total}</div>
-            <p className="text-sm text-gray-600">Total Guests</p>
+            <div className="text-2xl font-bold text-blue-600">{totalGuests}</div>
+            <p className="text-sm text-gray-600">Total Guests (Main)</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-pink-600">{childPlusOneCount}</div>
+            <p className="text-sm text-gray-600">Children/+1</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-800">{totalWithChildren}</div>
+            <p className="text-sm text-gray-600">Total (All incl. +1)</p>
           </CardContent>
         </Card>
         <Card>
@@ -330,7 +372,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Search Row - moved above filters */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
@@ -345,6 +387,14 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                 />
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filters Row - now without search */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <Select value={groupFilter} onValueChange={setGroupFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by group" />
@@ -417,7 +467,15 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
       {/* Guest Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Guests ({pagination.total})</CardTitle>
+          <CardTitle>
+            Guests ({totalGuests})
+            {childPlusOneCount > 0 && (
+              <span className="ml-2 text-sm text-pink-600">+{childPlusOneCount} child/+1</span>
+            )}
+            {childPlusOneCount > 0 && (
+              <span className="ml-2 text-xs text-blue-800">Total: {totalWithChildren}</span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -450,7 +508,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                   </TableHeader>
                   <TableBody>
                     {displayedGuests.map((guest) => (
-                      <TableRow key={guest.id}>
+                      <TableRow key={guest.id} className={absenteeIds.includes(guest.id) ? 'line-through opacity-60' : ''}>
                         <TableCell>
                           <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
                         </TableCell>
@@ -474,6 +532,8 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                             <Button
                               size="sm"
                               variant="outline"
+                              aria-label="Edit guest"
+                              title="Edit guest"
                               onClick={() => {
                                 setEditingGuest(guest)
                                 setShowGuestForm(true)
@@ -484,6 +544,8 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                             <Button
                               size="sm"
                               variant="outline"
+                              aria-label="Delete guest"
+                              title="Delete guest"
                               onClick={() => handleDeleteGuest(guest.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -491,9 +553,20 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                             <Button
                               size="sm"
                               variant="outline"
+                              aria-label="Send chat invitation"
+                              title="Send chat invitation"
                               onClick={() => handleShowInvitationPreview(guest)}
                             >
                               <MessageSquare className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              aria-label={absenteeIds.includes(guest.id) ? "Mark as attending" : "Mark as absentee (not attending)"}
+                              title={absenteeIds.includes(guest.id) ? "Mark as attending" : "Mark as absentee (not attending)"}
+                              onClick={() => toggleAbsentee(guest.id)}
+                            >
+                              <UserX className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -515,7 +588,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                       <TableHeader>
                         <TableRow>
                           <TableHead>
-                            <input type="checkbox" checked={groupGuests.every(g => selectedIds.includes(g.id)) && groupGuests.length>0} onChange={() => {
+                            <input type="checkbox" checked={groupGuests.every(g => selectedIds.includes(g.id)) && groupGuests.length > 0} onChange={() => {
                               // toggle group selection
                               const ids = groupGuests.map(g => g.id)
                               const allSelected = ids.every(id => selectedIds.includes(id))
@@ -531,7 +604,7 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                       </TableHeader>
                       <TableBody>
                         {groupGuests.map(guest => (
-                          <TableRow key={guest.id}>
+                          <TableRow key={guest.id} className={absenteeIds.includes(guest.id) ? 'line-through opacity-60' : ''}>
                             <TableCell>
                               <input type="checkbox" checked={selectedIds.includes(guest.id)} onChange={() => toggleSelect(guest.id)} />
                             </TableCell>
@@ -541,9 +614,10 @@ export function GuestList({ initialGuests = [], couple }: GuestListProps) {
                             <TableCell>{getStatusBadge(guest.invite_status)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Button size="sm" variant="outline" onClick={() => { setEditingGuest(guest); setShowGuestForm(true) }}><Edit className="w-4 h-4" /></Button>
-                                <Button size="sm" variant="outline" onClick={() => handleDeleteGuest(guest.id)}><Trash2 className="w-4 h-4" /></Button>
-                                <Button size="sm" variant="outline" onClick={() => handleShowInvitationPreview(guest)}><MessageSquare className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" aria-label="Edit guest" title="Edit guest" onClick={() => { setEditingGuest(guest); setShowGuestForm(true) }}><Edit className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" aria-label="Delete guest" title="Delete guest" onClick={() => handleDeleteGuest(guest.id)}><Trash2 className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" aria-label="Send chat invitation" title="Send chat invitation" onClick={() => handleShowInvitationPreview(guest)}><MessageSquare className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="outline" aria-label={absenteeIds.includes(guest.id) ? "Mark as attending" : "Mark as absentee (not attending)"} title={absenteeIds.includes(guest.id) ? "Mark as attending" : "Mark as absentee (not attending)"} onClick={() => toggleAbsentee(guest.id)}><UserX className="w-4 h-4" /></Button>
                               </div>
                             </TableCell>
                           </TableRow>
